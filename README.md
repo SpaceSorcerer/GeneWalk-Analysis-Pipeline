@@ -10,13 +10,14 @@ A Streamlit web application for running [GeneWalk](https://github.com/churchmanl
 - **Interactive visualizations** powered by Plotly:
   - Volcano plot (similarity vs. significance)
   - Per-gene GO term bar charts
+  - Interactive gene-GO term network graph
   - GO domain distribution pie chart
   - Gene-GO term similarity heatmap
   - P-value distribution histogram
   - Gene summary ranking
 - **Real-time filtering** by p-value threshold and GO domain
 - **CSV export** of filtered results
-- **Sample data** included (MAPK/ERK pathway genes)
+- **Instant demo mode** -- sample MAPK/ERK pathway genes with pre-computed results load immediately
 
 ## Quick Start
 
@@ -51,16 +52,19 @@ The app opens in your browser at `http://localhost:8501`.
 
 ```
 GeneWalk-Analysis-Pipeline/
-  app.py                     # Main Streamlit application
-  requirements.txt           # Python dependencies
+  app.py                          # Main Streamlit application
+  Dockerfile                      # Container deployment
+  requirements.txt                # Python dependencies
+  generate_sample_data.py         # Script to regenerate demo results
   genewalk_app/
     __init__.py
-    runner.py                # GeneWalk execution & result parsing
-    visualizations.py        # Plotly visualization functions
+    runner.py                     # GeneWalk execution & result parsing
+    visualizations.py             # Plotly visualization functions (7 chart types)
   sample_data/
-    sample_genes.txt         # Example gene list (MAPK/ERK pathway)
+    sample_genes.txt              # Example gene list (MAPK/ERK pathway)
+    sample_genewalk_results.csv   # Pre-computed results for instant demo
   .streamlit/
-    config.toml              # Streamlit theme & server config
+    config.toml                   # Streamlit theme & server config
 ```
 
 ## Deployment

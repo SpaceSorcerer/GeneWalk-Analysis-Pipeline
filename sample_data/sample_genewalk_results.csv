@@ -1,0 +1,460 @@
+hgnc_symbol,hgnc_id,go_name,go_id,go_domain,sim,sem_sim,cilow,ciupp,global_padj,gene_padj
+BRAF,HGNC:1212,Ras protein signal transduction,GO:0007265,biological_process,0.4796,0.0204,0.4396,0.5196,0.994502,0.704312
+BRAF,HGNC:10105,positive regulation of gene expression,GO:0010628,biological_process,0.5053,0.0353,0.4361,0.5745,0.290707,0.168063
+BRAF,HGNC:12270,innate immune response,GO:0045087,biological_process,0.1433,0.0277,0.089,0.1976,0.969876,0.957641
+BRAF,HGNC:18571,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.4122,0.0338,0.346,0.4784,1.0,0.809057
+BRAF,HGNC:12850,positive regulation of MAPK cascade,GO:0043410,biological_process,0.1249,0.0373,0.0518,0.198,1.0,0.923072
+BRAF,HGNC:8467,apoptotic process,GO:0006915,biological_process,0.3964,0.034,0.3298,0.463,0.637349,0.707526
+BRAF,HGNC:15857,positive regulation of cell population proliferation,GO:0008284,biological_process,0.5138,0.0423,0.4309,0.5967,1.0,0.985369
+BRAF,HGNC:7865,MAP kinase activity,GO:0004707,molecular_function,0.4314,0.0142,0.4036,0.4592,0.599239,0.371184
+BRAF,HGNC:18502,protein phosphorylation,GO:0006468,biological_process,0.8776,0.0164,0.8455,0.9097,0.000145,6.6e-05
+BRAF,HGNC:2832,MAPK cascade,GO:0000165,biological_process,0.9477,0.0241,0.9005,0.9949,0.000115,5e-05
+BRAF,HGNC:19585,MAP kinase kinase activity,GO:0004708,molecular_function,0.1874,0.0268,0.1349,0.2399,0.052815,0.041779
+BRAF,HGNC:13964,plasma membrane,GO:0005886,cellular_component,0.5758,0.0372,0.5029,0.6487,0.720861,0.321531
+BRAF,HGNC:18661,cell cycle,GO:0007049,biological_process,0.5808,0.0334,0.5153,0.6463,1.0,0.646423
+BRAF,HGNC:14087,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.2076,0.0343,0.1404,0.2748,1.0,0.58874
+BRAF,HGNC:4592,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.2672,0.0375,0.1937,0.3407,1.0,0.997353
+BRAF,HGNC:3081,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.1417,0.0389,0.0655,0.2179,0.386783,0.168382
+BRAF,HGNC:1376,membrane,GO:0016020,cellular_component,0.2809,0.0225,0.2368,0.325,1.0,0.59993
+BRAF,HGNC:9743,metal ion binding,GO:0046872,molecular_function,0.4582,0.0315,0.3965,0.5199,0.338939,0.123406
+MAP2K1,HGNC:11076,cell cycle,GO:0007049,biological_process,0.4094,0.0372,0.3365,0.4823,1.0,0.49372
+MAP2K1,HGNC:3580,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.1937,0.0361,0.1229,0.2645,0.508898,0.248463
+MAP2K1,HGNC:5207,MAP kinase activity,GO:0004707,molecular_function,0.1014,0.0453,0.0126,0.1902,1.0,0.491131
+MAP2K1,HGNC:18290,protein autophosphorylation,GO:0046777,biological_process,0.4459,0.0371,0.3732,0.5186,1.0,0.94738
+MAP2K1,HGNC:7591,enzyme binding,GO:0019899,molecular_function,0.5735,0.033,0.5088,0.6382,1.0,0.428907
+MAP2K1,HGNC:15794,MAPK cascade,GO:0000165,biological_process,0.9663,0.0254,0.9165,1,0.00022,7.9e-05
+MAP2K1,HGNC:19150,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.1226,0.0215,0.0805,0.1647,0.358854,0.23245
+MAP2K1,HGNC:2029,cytosol,GO:0005829,cellular_component,0.1881,0.0427,0.1044,0.2718,0.297257,0.228015
+MAP2K1,HGNC:16906,intracellular signal transduction,GO:0035556,biological_process,0.5658,0.0361,0.495,0.6366,0.106086,0.080149
+MAP2K1,HGNC:16498,nucleus,GO:0005634,cellular_component,0.1785,0.042,0.0962,0.2608,0.259402,0.140989
+MAP2K1,HGNC:15124,cytoplasm,GO:0005737,cellular_component,0.5345,0.0249,0.4857,0.5833,0.201136,0.198506
+MAP2K1,HGNC:4224,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.2626,0.0322,0.1995,0.3257,0.93306,0.416991
+MAP2K1,HGNC:4580,Golgi apparatus,GO:0005794,cellular_component,0.0864,0.0275,0.0325,0.1403,1.0,0.730931
+MAP2K1,HGNC:9185,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.1992,0.0201,0.1598,0.2386,0.280168,0.198307
+MAP2K1,HGNC:19033,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.5747,0.0333,0.5094,0.64,0.218149,0.084631
+MAP2K1,HGNC:8745,kinase activity,GO:0016301,molecular_function,0.1087,0.0283,0.0532,0.1642,0.659018,0.655623
+MAP2K1,HGNC:14141,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.1498,0.0296,0.0918,0.2078,0.623417,0.490785
+MAP2K1,HGNC:15909,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.5915,0.0399,0.5133,0.6697,0.491007,0.172991
+MAP2K1,HGNC:19211,apoptotic process,GO:0006915,biological_process,0.2211,0.0301,0.1621,0.2801,1.0,0.699626
+MAP2K1,HGNC:18766,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.4471,0.0326,0.3832,0.511,0.456721,0.491805
+MAP2K1,HGNC:18403,MAP kinase kinase activity,GO:0004708,molecular_function,0.9295,0.0408,0.8495,1,8e-06,3e-06
+MAP2K1,HGNC:7089,positive regulation of cell population proliferation,GO:0008284,biological_process,0.1445,0.0335,0.0788,0.2102,0.938339,0.961171
+MAP2K1,HGNC:19667,positive regulation of gene expression,GO:0010628,biological_process,0.0911,0.0366,0.0194,0.1628,0.221913,0.077281
+MAP2K1,HGNC:14737,protein binding,GO:0005515,molecular_function,0.1977,0.0222,0.1542,0.2412,1.0,0.598574
+MAP2K1,HGNC:11295,plasma membrane,GO:0005886,cellular_component,0.4444,0.0269,0.3917,0.4971,1.0,0.569575
+MAP2K2,HGNC:10912,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.221,0.0371,0.1483,0.2937,0.885422,0.443803
+MAP2K2,HGNC:10810,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.417,0.0293,0.3596,0.4744,1.0,0.987361
+MAP2K2,HGNC:9666,positive regulation of MAPK cascade,GO:0043410,biological_process,0.6091,0.029,0.5523,0.6659,0.307476,0.112551
+MAP2K2,HGNC:12235,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.1193,0.0225,0.0752,0.1634,0.24708,0.115966
+MAP2K2,HGNC:17008,enzyme binding,GO:0019899,molecular_function,0.1722,0.0274,0.1185,0.2259,0.880784,0.637896
+MAP2K2,HGNC:2444,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.2007,0.0435,0.1154,0.286,1.0,0.909077
+MAP2K2,HGNC:9583,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.0521,0.0345,0,0.1197,1.0,0.773408
+MAP2K2,HGNC:5884,MAPK cascade,GO:0000165,biological_process,0.9271,0.0392,0.8503,1,0.000158,0.000151
+MAP2K2,HGNC:11101,cytoplasm,GO:0005737,cellular_component,0.3774,0.0251,0.3282,0.4266,0.903467,0.836249
+MAP2K2,HGNC:2307,nucleoplasm,GO:0005654,cellular_component,0.2688,0.0272,0.2155,0.3221,1.0,0.933757
+MAP2K2,HGNC:14316,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.5894,0.03,0.5306,0.6482,0.548483,0.217976
+MAP2K2,HGNC:8757,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.6343,0.0347,0.5663,0.7023,1.0,0.751983
+MAP2K2,HGNC:4542,protein phosphorylation,GO:0006468,biological_process,0.9041,0.0094,0.8857,0.9225,0.000544,0.000215
+MAP2K2,HGNC:12457,positive regulation of gene expression,GO:0010628,biological_process,0.2795,0.0234,0.2336,0.3254,0.136339,0.048337
+MAP2K2,HGNC:1775,apoptotic process,GO:0006915,biological_process,0.2331,0.0312,0.1719,0.2943,1.0,0.797392
+MAP2K2,HGNC:12506,cytoskeleton,GO:0005856,cellular_component,0.446,0.0293,0.3886,0.5034,1.0,0.404481
+MAP2K2,HGNC:18570,Golgi apparatus,GO:0005794,cellular_component,0.4349,0.0337,0.3688,0.501,1.0,0.405682
+MAP2K2,HGNC:9698,nucleus,GO:0005634,cellular_component,0.2487,0.0356,0.1789,0.3185,0.077535,0.037325
+MAP2K2,HGNC:11278,intracellular signal transduction,GO:0035556,biological_process,0.073,0.0246,0.0248,0.1212,0.937253,0.600606
+MAP2K2,HGNC:2454,MAP kinase activity,GO:0004707,molecular_function,0.3118,0.046,0.2216,0.402,1.0,0.984393
+MAP2K2,HGNC:18643,cell cycle,GO:0007049,biological_process,0.4753,0.0442,0.3887,0.5619,0.033111,0.011674
+MAP2K2,HGNC:11819,ATP binding,GO:0005524,molecular_function,0.4621,0.0295,0.4043,0.5199,1.0,0.94086
+MAPK1,HGNC:16236,cell cycle,GO:0007049,biological_process,0.3079,0.0234,0.262,0.3538,1.0,0.584185
+MAPK1,HGNC:6560,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.3151,0.0123,0.291,0.3392,1.0,0.678871
+MAPK1,HGNC:11983,cytosol,GO:0005829,cellular_component,0.4453,0.0288,0.3889,0.5017,0.657684,0.290949
+MAPK1,HGNC:5828,membrane,GO:0016020,cellular_component,0.106,0.0308,0.0456,0.1664,1.0,0.95248
+MAPK1,HGNC:3386,kinase activity,GO:0016301,molecular_function,0.0647,0.0386,0,0.1404,0.465743,0.252394
+MAPK1,HGNC:14095,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.3232,0.0158,0.2922,0.3542,1.0,0.887276
+MAPK1,HGNC:4492,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.1964,0.0227,0.1519,0.2409,0.535643,0.659497
+MAPK1,HGNC:19265,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.5171,0.0351,0.4483,0.5859,0.412964,0.226653
+MAPK1,HGNC:16225,positive regulation of MAPK cascade,GO:0043410,biological_process,0.1995,0.0155,0.1691,0.2299,1.0,0.849853
+MAPK1,HGNC:17540,apoptotic process,GO:0006915,biological_process,0.4505,0.0098,0.4313,0.4697,1.0,0.988014
+MAPK1,HGNC:6215,activation of MAPK activity,GO:0000187,biological_process,0.306,0.0162,0.2742,0.3378,1.0,0.907786
+MAPK1,HGNC:18081,ATP binding,GO:0005524,molecular_function,0.4962,0.0296,0.4382,0.5542,1.0,0.479928
+MAPK1,HGNC:10362,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.3408,0.0375,0.2673,0.4143,0.436367,0.246853
+MAPK1,HGNC:13551,metal ion binding,GO:0046872,molecular_function,0.1907,0.0332,0.1256,0.2558,0.387638,0.342489
+MAPK1,HGNC:14356,protein binding,GO:0005515,molecular_function,0.4664,0.0274,0.4127,0.5201,0.667718,0.709355
+MAPK1,HGNC:1640,positive regulation of cell population proliferation,GO:0008284,biological_process,0.2485,0.0475,0.1554,0.3416,0.780815,0.471265
+MAPK1,HGNC:1193,nucleoplasm,GO:0005654,cellular_component,0.564,0.0372,0.4911,0.6369,1.0,0.767939
+MAPK1,HGNC:18636,Golgi apparatus,GO:0005794,cellular_component,0.6156,0.0138,0.5886,0.6426,0.806428,0.305627
+MAPK1,HGNC:8226,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.4985,0.0434,0.4134,0.5836,1.0,0.550671
+MAPK1,HGNC:14248,MAP kinase activity,GO:0004707,molecular_function,0.9061,0.0306,0.8461,0.9661,5e-05,2.2e-05
+MAPK1,HGNC:13911,positive regulation of gene expression,GO:0010628,biological_process,0.4845,0.0546,0.3775,0.5915,1.0,0.842101
+MAPK1,HGNC:6954,MAPK cascade,GO:0000165,biological_process,0.8992,0.0391,0.8226,0.9758,0.000138,5.1e-05
+MAPK1,HGNC:11710,cytoplasm,GO:0005737,cellular_component,0.0802,0.0353,0.011,0.1494,0.487672,0.385313
+MAPK1,HGNC:3683,nucleus,GO:0005634,cellular_component,0.2525,0.0257,0.2021,0.3029,1.0,0.880844
+MAPK1,HGNC:12467,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.3322,0.0542,0.226,0.4384,0.687344,0.751534
+MAPK3,HGNC:19867,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.5167,0.0251,0.4675,0.5659,0.489455,0.172128
+MAPK3,HGNC:4339,protein phosphorylation,GO:0006468,biological_process,0.9166,0.0436,0.8311,1,2.6e-05,1.2e-05
+MAPK3,HGNC:4966,Ras protein signal transduction,GO:0007265,biological_process,0.4683,0.037,0.3958,0.5408,0.711361,0.308567
+MAPK3,HGNC:3259,innate immune response,GO:0045087,biological_process,0.5277,0.0419,0.4456,0.6098,1.0,0.570273
+MAPK3,HGNC:17062,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.3536,0.0331,0.2887,0.4185,0.928352,0.347819
+MAPK3,HGNC:15270,Golgi apparatus,GO:0005794,cellular_component,0.1133,0.0176,0.0788,0.1478,1.0,0.96118
+MAPK3,HGNC:18634,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.1557,0.0159,0.1245,0.1869,1.0,0.526529
+MAPK3,HGNC:9044,nucleoplasm,GO:0005654,cellular_component,0.5148,0.0361,0.444,0.5856,0.709602,0.470225
+MAPK3,HGNC:8990,positive regulation of MAPK cascade,GO:0043410,biological_process,0.5484,0.0181,0.5129,0.5839,0.262442,0.095796
+MAPK3,HGNC:11650,cytosol,GO:0005829,cellular_component,0.5003,0.0255,0.4503,0.5503,1.0,0.574151
+MAPK3,HGNC:12152,ATP binding,GO:0005524,molecular_function,0.1591,0.0221,0.1158,0.2024,0.562148,0.219999
+MAPK3,HGNC:7260,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.2178,0.0393,0.1408,0.2948,1.0,0.600193
+MAPK3,HGNC:8874,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.1014,0.0213,0.0597,0.1431,1.0,0.722874
+MAPK3,HGNC:8261,apoptotic process,GO:0006915,biological_process,0.4644,0.0123,0.4403,0.4885,0.652508,0.649444
+MAPK3,HGNC:13092,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.2926,0.031,0.2318,0.3534,0.567149,0.250872
+MAPK3,HGNC:15868,protein kinase activity,GO:0004672,molecular_function,0.334,0.0152,0.3042,0.3638,0.818278,0.535613
+MAPK3,HGNC:7310,MAP kinase kinase activity,GO:0004708,molecular_function,0.2125,0.0375,0.139,0.286,0.275833,0.25889
+MAPK3,HGNC:16866,intracellular signal transduction,GO:0035556,biological_process,0.2393,0.0446,0.1519,0.3267,0.910488,0.745452
+MAPK3,HGNC:10273,positive regulation of cell population proliferation,GO:0008284,biological_process,0.2159,0.0253,0.1663,0.2655,1.0,0.593691
+MAPK3,HGNC:18502,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.6383,0.0273,0.5848,0.6918,1.0,0.834302
+MAPK3,HGNC:10572,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.1259,0.0391,0.0493,0.2025,0.050654,0.055061
+MAPK3,HGNC:19810,metal ion binding,GO:0046872,molecular_function,0.4685,0.0379,0.3942,0.5428,0.367244,0.135017
+RAF1,HGNC:15507,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.8944,0.0319,0.8319,0.9569,0.000274,0.000153
+RAF1,HGNC:19632,cytoskeleton,GO:0005856,cellular_component,0.2284,0.042,0.1461,0.3107,1.0,0.59264
+RAF1,HGNC:7914,metal ion binding,GO:0046872,molecular_function,0.4226,0.0285,0.3667,0.4785,0.771295,0.613535
+RAF1,HGNC:19087,ATP binding,GO:0005524,molecular_function,0.2088,0.0058,0.1974,0.2202,0.119993,0.090376
+RAF1,HGNC:8585,intracellular signal transduction,GO:0035556,biological_process,0.095,0.0172,0.0613,0.1287,0.018224,0.012649
+RAF1,HGNC:3332,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.2229,0.0341,0.1561,0.2897,0.780136,0.289891
+RAF1,HGNC:7482,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.4624,0.0333,0.3971,0.5277,1.0,0.924672
+RAF1,HGNC:9704,membrane,GO:0016020,cellular_component,0.3051,0.0164,0.273,0.3372,1.0,0.549117
+RAF1,HGNC:19651,cell cycle,GO:0007049,biological_process,0.546,0.0343,0.4788,0.6132,0.19752,0.080696
+RAF1,HGNC:10964,kinase activity,GO:0016301,molecular_function,0.6027,0.0374,0.5294,0.676,0.81442,0.444762
+RAF1,HGNC:2306,protein phosphorylation,GO:0006468,biological_process,0.4698,0.0183,0.4339,0.5057,0.921528,0.943249
+RAF1,HGNC:1847,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.5837,0.03,0.5249,0.6425,1.0,0.737189
+RAF1,HGNC:9831,innate immune response,GO:0045087,biological_process,0.1048,0.0367,0.0329,0.1767,1.0,0.962292
+RAF1,HGNC:18005,enzyme binding,GO:0019899,molecular_function,0.3957,0.0188,0.3589,0.4325,0.907413,0.765478
+RAF1,HGNC:17112,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.4409,0.0355,0.3713,0.5105,1.0,0.916912
+RAF1,HGNC:11520,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.6314,0.0421,0.5489,0.7139,0.80725,0.47531
+RAF1,HGNC:14122,nucleoplasm,GO:0005654,cellular_component,0.4521,0.0226,0.4078,0.4964,1.0,0.859156
+RAF1,HGNC:14244,Ras protein signal transduction,GO:0007265,biological_process,0.9105,0.0217,0.868,0.953,0.000721,0.000477
+RAF1,HGNC:18779,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.5689,0.0324,0.5054,0.6324,0.663436,0.826678
+RAF1,HGNC:15484,protein binding,GO:0005515,molecular_function,0.3272,0.0161,0.2956,0.3588,0.120747,0.063662
+RAF1,HGNC:10438,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.506,0.0284,0.4503,0.5617,0.424798,0.211523
+RAF1,HGNC:8841,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.3129,0.0494,0.2161,0.4097,1.0,0.701268
+RAF1,HGNC:14369,cytosol,GO:0005829,cellular_component,0.4759,0.0486,0.3806,0.5712,0.26367,0.317643
+RAF1,HGNC:6045,MAP kinase kinase activity,GO:0004708,molecular_function,0.1059,0.0395,0.0285,0.1833,1.0,0.992335
+KRAS,HGNC:15920,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.2571,0.0242,0.2097,0.3045,1.0,0.556398
+KRAS,HGNC:14460,cytosol,GO:0005829,cellular_component,0.6097,0.0373,0.5366,0.6828,1.0,0.870906
+KRAS,HGNC:13492,positive regulation of gene expression,GO:0010628,biological_process,0.0762,0.0291,0.0192,0.1332,1.0,0.747258
+KRAS,HGNC:2213,kinase activity,GO:0016301,molecular_function,0.2816,0.0421,0.1991,0.3641,1.0,0.667052
+KRAS,HGNC:4288,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.1257,0.0046,0.1167,0.1347,1.0,0.9657
+KRAS,HGNC:14434,cytoplasm,GO:0005737,cellular_component,0.5745,0.0191,0.5371,0.6119,1.0,0.445903
+KRAS,HGNC:9684,innate immune response,GO:0045087,biological_process,0.5726,0.0282,0.5173,0.6279,0.935931,0.970257
+KRAS,HGNC:18485,enzyme binding,GO:0019899,molecular_function,0.2531,0.0185,0.2168,0.2894,1.0,0.695778
+KRAS,HGNC:16989,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.278,0.0142,0.2502,0.3058,0.770299,0.323495
+KRAS,HGNC:8454,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.5734,0.0428,0.4895,0.6573,0.128698,0.04554
+KRAS,HGNC:4293,apoptotic process,GO:0006915,biological_process,0.4981,0.0359,0.4277,0.5685,0.446919,0.439632
+KRAS,HGNC:10613,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.3162,0.0325,0.2525,0.3799,1.0,0.697061
+KRAS,HGNC:14502,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.2651,0.0283,0.2096,0.3206,0.583542,0.43638
+KRAS,HGNC:8891,protein binding,GO:0005515,molecular_function,0.3896,0.032,0.3269,0.4523,1.0,0.794594
+KRAS,HGNC:9322,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.3486,0.0336,0.2827,0.4145,0.769875,0.587326
+KRAS,HGNC:18910,protein phosphorylation,GO:0006468,biological_process,0.3257,0.039,0.2493,0.4021,0.960216,0.670172
+KRAS,HGNC:10802,positive regulation of MAPK cascade,GO:0043410,biological_process,0.1448,0.0234,0.0989,0.1907,0.697916,0.447312
+KRAS,HGNC:13605,activation of MAPK activity,GO:0000187,biological_process,0.4334,0.03,0.3746,0.4922,0.532541,0.430066
+KRAS,HGNC:12762,protein autophosphorylation,GO:0046777,biological_process,0.562,0.0493,0.4654,0.6586,0.189447,0.115587
+KRAS,HGNC:9994,MAP kinase activity,GO:0004707,molecular_function,0.3949,0.0223,0.3512,0.4386,1.0,0.992765
+KRAS,HGNC:2607,nucleoplasm,GO:0005654,cellular_component,0.0549,0.0565,0,0.1656,1.0,0.866417
+KRAS,HGNC:8176,MAPK cascade,GO:0000165,biological_process,0.892,0.0212,0.8504,0.9336,0.000441,0.000172
+KRAS,HGNC:5481,MAP kinase kinase activity,GO:0004708,molecular_function,0.432,0.023,0.3869,0.4771,1.0,0.624682
+KRAS,HGNC:11123,Golgi apparatus,GO:0005794,cellular_component,0.4269,0.0156,0.3963,0.4575,1.0,0.90437
+KRAS,HGNC:11705,nucleus,GO:0005634,cellular_component,0.5232,0.0265,0.4713,0.5751,0.120538,0.043031
+KRAS,HGNC:18675,protein kinase activity,GO:0004672,molecular_function,0.4985,0.034,0.4319,0.5651,0.200572,0.183884
+KRAS,HGNC:16789,GTP binding,GO:0005525,molecular_function,0.9504,0.0233,0.9047,0.9961,2.8e-05,2.4e-05
+KRAS,HGNC:3467,cell cycle,GO:0007049,biological_process,0.6304,0.0424,0.5473,0.7135,0.553107,0.30219
+KRAS,HGNC:14022,metal ion binding,GO:0046872,molecular_function,0.1345,0.0169,0.1014,0.1676,1.0,0.966835
+KRAS,HGNC:18582,plasma membrane,GO:0005886,cellular_component,0.6304,0.0182,0.5947,0.6661,0.669931,0.806542
+NRAS,HGNC:14379,enzyme binding,GO:0019899,molecular_function,0.5443,0.0432,0.4596,0.629,1.0,0.910294
+NRAS,HGNC:8693,protein binding,GO:0005515,molecular_function,0.12,0.0623,0,0.2421,0.057938,0.054893
+NRAS,HGNC:18701,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.5824,0.0377,0.5085,0.6563,0.259466,0.144307
+NRAS,HGNC:17034,GTP binding,GO:0005525,molecular_function,0.8668,0.038,0.7923,0.9413,4e-06,4e-06
+NRAS,HGNC:15571,membrane,GO:0016020,cellular_component,0.4194,0.0272,0.3661,0.4727,1.0,0.939663
+NRAS,HGNC:13036,apoptotic process,GO:0006915,biological_process,0.6203,0.045,0.5321,0.7085,0.872817,0.856896
+NRAS,HGNC:5002,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.3767,0.0236,0.3304,0.423,1.0,0.978064
+NRAS,HGNC:7950,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.6194,0.0378,0.5453,0.6935,0.827338,0.825949
+NRAS,HGNC:3248,Ras protein signal transduction,GO:0007265,biological_process,0.9045,0.0195,0.8663,0.9427,1.8e-05,9e-06
+NRAS,HGNC:5835,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.5479,0.0143,0.5199,0.5759,0.733303,0.558666
+NRAS,HGNC:5741,metal ion binding,GO:0046872,molecular_function,0.5232,0.0205,0.483,0.5634,0.846034,0.600022
+NRAS,HGNC:5318,positive regulation of gene expression,GO:0010628,biological_process,0.6425,0.0314,0.581,0.704,1.0,0.544813
+NRAS,HGNC:11609,protein autophosphorylation,GO:0046777,biological_process,0.0589,0.0254,0.0091,0.1087,1.0,0.792085
+NRAS,HGNC:3082,cytosol,GO:0005829,cellular_component,0.0595,0.0373,0,0.1326,0.286357,0.272714
+NRAS,HGNC:4573,cell cycle,GO:0007049,biological_process,0.3357,0.0375,0.2622,0.4092,1.0,0.780237
+NRAS,HGNC:18086,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.3212,0.0179,0.2861,0.3563,0.641964,0.229334
+NRAS,HGNC:16695,protein phosphorylation,GO:0006468,biological_process,0.231,0.0193,0.1932,0.2688,0.561859,0.646907
+NRAS,HGNC:3647,nucleoplasm,GO:0005654,cellular_component,0.5584,0.0423,0.4755,0.6413,0.767181,0.432011
+HRAS,HGNC:11241,membrane,GO:0016020,cellular_component,0.5465,0.0399,0.4683,0.6247,0.973467,0.404743
+HRAS,HGNC:3199,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.3061,0.0259,0.2553,0.3569,1.0,0.668457
+HRAS,HGNC:13210,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.1047,0.0341,0.0379,0.1715,0.165406,0.094511
+HRAS,HGNC:5005,positive regulation of MAPK cascade,GO:0043410,biological_process,0.5371,0.019,0.4999,0.5743,0.855355,0.560807
+HRAS,HGNC:14858,positive regulation of gene expression,GO:0010628,biological_process,0.2965,0.0234,0.2506,0.3424,1.0,0.874871
+HRAS,HGNC:19937,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.5709,0.0433,0.486,0.6558,1.0,0.72385
+HRAS,HGNC:19227,GTP binding,GO:0005525,molecular_function,0.892,0.0107,0.871,0.913,5.5e-05,3.5e-05
+HRAS,HGNC:15061,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.2705,0.0322,0.2074,0.3336,1.0,0.76498
+HRAS,HGNC:1860,enzyme binding,GO:0019899,molecular_function,0.5571,0.0357,0.4871,0.6271,1.0,0.974801
+HRAS,HGNC:1948,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.4154,0.0175,0.3811,0.4497,1.0,0.661253
+HRAS,HGNC:5694,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.1582,0.0267,0.1059,0.2105,0.574017,0.705672
+HRAS,HGNC:2004,activation of MAPK activity,GO:0000187,biological_process,0.3898,0.0385,0.3143,0.4653,0.452387,0.406777
+HRAS,HGNC:11211,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.1051,0.0222,0.0616,0.1486,0.613475,0.535178
+HRAS,HGNC:3783,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.483,0.0377,0.4091,0.5569,1.0,0.779067
+HRAS,HGNC:15519,protein kinase activity,GO:0004672,molecular_function,0.58,0.0301,0.521,0.639,0.160658,0.164024
+HRAS,HGNC:9951,MAP kinase activity,GO:0004707,molecular_function,0.4472,0.0268,0.3947,0.4997,0.86995,0.490805
+HRAS,HGNC:16945,plasma membrane,GO:0005886,cellular_component,0.1793,0.0273,0.1258,0.2328,1.0,0.517223
+HRAS,HGNC:2795,protein binding,GO:0005515,molecular_function,0.3662,0.034,0.2996,0.4328,0.40525,0.315335
+HRAS,HGNC:11751,cytoplasm,GO:0005737,cellular_component,0.0546,0.0313,0,0.1159,0.420092,0.308405
+HRAS,HGNC:5233,apoptotic process,GO:0006915,biological_process,0.122,0.0353,0.0528,0.1912,0.877934,0.502411
+HRAS,HGNC:3361,metal ion binding,GO:0046872,molecular_function,0.2781,0.0111,0.2563,0.2999,1.0,0.706635
+HRAS,HGNC:16065,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.2882,0.03,0.2294,0.347,1.0,0.744621
+HRAS,HGNC:14686,cell cycle,GO:0007049,biological_process,0.6027,0.0184,0.5666,0.6388,1.0,0.863489
+HRAS,HGNC:6631,MAP kinase kinase activity,GO:0004708,molecular_function,0.2237,0.024,0.1767,0.2707,1.0,0.410982
+HRAS,HGNC:4468,protein autophosphorylation,GO:0046777,biological_process,0.5308,0.0411,0.4502,0.6114,0.618141,0.621944
+ARAF,HGNC:6009,MAP kinase activity,GO:0004707,molecular_function,0.1918,0.0105,0.1712,0.2124,0.191245,0.15498
+ARAF,HGNC:19472,Golgi apparatus,GO:0005794,cellular_component,0.5061,0.0376,0.4324,0.5798,1.0,0.658954
+ARAF,HGNC:19497,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.5059,0.0454,0.4169,0.5949,1.0,0.454416
+ARAF,HGNC:15410,nucleus,GO:0005634,cellular_component,0.4358,0.0182,0.4001,0.4715,1.0,0.986667
+ARAF,HGNC:10000,positive regulation of cell population proliferation,GO:0008284,biological_process,0.091,0.0538,0,0.1964,0.656546,0.447786
+ARAF,HGNC:13082,membrane,GO:0016020,cellular_component,0.4049,0.0399,0.3267,0.4831,0.316393,0.358423
+ARAF,HGNC:3958,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.549,0.035,0.4804,0.6176,0.232219,0.085964
+ARAF,HGNC:2344,ATP binding,GO:0005524,molecular_function,0.419,0.0176,0.3845,0.4535,1.0,0.511997
+ARAF,HGNC:11535,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.3198,0.033,0.2551,0.3845,1.0,0.811718
+ARAF,HGNC:12253,protein autophosphorylation,GO:0046777,biological_process,0.413,0.0406,0.3334,0.4926,1.0,0.506354
+ARAF,HGNC:2282,GTP binding,GO:0005525,molecular_function,0.6394,0.0271,0.5863,0.6925,0.207677,0.093486
+ARAF,HGNC:13217,cytoplasm,GO:0005737,cellular_component,0.1986,0.0187,0.1619,0.2353,0.509552,0.443381
+ARAF,HGNC:2715,protein phosphorylation,GO:0006468,biological_process,0.6008,0.0345,0.5332,0.6684,0.985359,0.393542
+ARAF,HGNC:10310,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.5235,0.0341,0.4567,0.5903,1.0,0.650832
+ARAF,HGNC:3776,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.8354,0.0272,0.7821,0.8887,2.1e-05,9e-06
+ARAF,HGNC:5187,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.2357,0.0255,0.1857,0.2857,0.973233,0.382913
+ARAF,HGNC:14874,kinase activity,GO:0016301,molecular_function,0.4521,0.0289,0.3955,0.5087,1.0,0.830669
+ARAF,HGNC:8018,protein binding,GO:0005515,molecular_function,0.3551,0.0148,0.3261,0.3841,0.041497,0.028048
+ARAF,HGNC:10692,apoptotic process,GO:0006915,biological_process,0.255,0.0465,0.1639,0.3461,0.87676,0.768495
+ARAF,HGNC:18253,intracellular signal transduction,GO:0035556,biological_process,0.5567,0.0731,0.4134,0.7,0.274874,0.110129
+ARAF,HGNC:6316,plasma membrane,GO:0005886,cellular_component,0.0726,0.0305,0.0128,0.1324,0.559319,0.343397
+ARAF,HGNC:6424,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.1585,0.0247,0.1101,0.2069,1.0,0.695917
+RPS6KA1,HGNC:4361,protein phosphorylation,GO:0006468,biological_process,0.8647,0.0358,0.7945,0.9349,0.004767,0.00236
+RPS6KA1,HGNC:15723,kinase activity,GO:0016301,molecular_function,0.4768,0.033,0.4121,0.5415,0.600262,0.52075
+RPS6KA1,HGNC:8275,protein binding,GO:0005515,molecular_function,0.5932,0.033,0.5285,0.6579,0.27472,0.155875
+RPS6KA1,HGNC:13253,innate immune response,GO:0045087,biological_process,0.54,0.0394,0.4628,0.6172,1.0,0.885783
+RPS6KA1,HGNC:1923,metal ion binding,GO:0046872,molecular_function,0.1915,0.0256,0.1413,0.2417,1.0,0.99458
+RPS6KA1,HGNC:2255,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.2412,0.028,0.1863,0.2961,0.121204,0.108092
+RPS6KA1,HGNC:5547,cytoplasm,GO:0005737,cellular_component,0.2221,0.0212,0.1805,0.2637,1.0,0.831464
+RPS6KA1,HGNC:8066,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.5053,0.0137,0.4784,0.5322,0.39937,0.474419
+RPS6KA1,HGNC:18294,nucleoplasm,GO:0005654,cellular_component,0.551,0.0156,0.5204,0.5816,1.0,0.553316
+RPS6KA1,HGNC:15978,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.304,0.0304,0.2444,0.3636,1.0,0.778411
+RPS6KA1,HGNC:18565,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.0877,0.0351,0.0189,0.1565,1.0,0.838321
+RPS6KA1,HGNC:12561,enzyme binding,GO:0019899,molecular_function,0.0599,0.0303,0.0005,0.1193,0.907437,0.520222
+RPS6KA1,HGNC:3805,MAP kinase kinase activity,GO:0004708,molecular_function,0.1943,0.0356,0.1245,0.2641,0.955311,0.422402
+RPS6KA1,HGNC:17633,membrane,GO:0016020,cellular_component,0.3641,0.042,0.2818,0.4464,0.928544,0.366998
+RPS6KA1,HGNC:13677,apoptotic process,GO:0006915,biological_process,0.3825,0.0264,0.3308,0.4342,0.727389,0.396549
+RPS6KA1,HGNC:4396,intracellular signal transduction,GO:0035556,biological_process,0.6386,0.0475,0.5455,0.7317,0.406963,0.261114
+RPS6KA1,HGNC:2452,ATP binding,GO:0005524,molecular_function,0.5129,0.0318,0.4506,0.5752,1.0,0.737835
+RPS6KA1,HGNC:16680,plasma membrane,GO:0005886,cellular_component,0.2614,0.0182,0.2257,0.2971,0.796048,0.345162
+RPS6KA1,HGNC:15997,cytosol,GO:0005829,cellular_component,0.429,0.0153,0.399,0.459,0.763621,0.813383
+RPS6KA1,HGNC:11160,Golgi apparatus,GO:0005794,cellular_component,0.0722,0.0353,0.003,0.1414,0.31317,0.209575
+RPS6KA1,HGNC:9300,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.3592,0.0099,0.3398,0.3786,1.0,0.989231
+RPS6KA1,HGNC:11876,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.072,0.0255,0.022,0.122,0.58875,0.650431
+RPS6KA1,HGNC:14107,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.2139,0.0494,0.1171,0.3107,1.0,0.801349
+RPS6KA1,HGNC:17302,positive regulation of gene expression,GO:0010628,biological_process,0.496,0.0096,0.4772,0.5148,1.0,0.895691
+RPS6KA1,HGNC:3707,activation of MAPK activity,GO:0000187,biological_process,0.2704,0.0476,0.1771,0.3637,1.0,0.799318
+RPS6KA1,HGNC:11525,cytoskeleton,GO:0005856,cellular_component,0.4862,0.0151,0.4566,0.5158,0.17628,0.088138
+RPS6KA1,HGNC:15611,MAP kinase activity,GO:0004707,molecular_function,0.1116,0.0188,0.0748,0.1484,0.485366,0.334641
+RPS6KA1,HGNC:12552,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.4116,0.0266,0.3595,0.4637,0.385725,0.431855
+RPS6KA1,HGNC:2879,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.4189,0.0214,0.377,0.4608,0.972311,0.440591
+RPS6KA3,HGNC:3519,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.0694,0.0208,0.0286,0.1102,0.287649,0.161904
+RPS6KA3,HGNC:10132,protein binding,GO:0005515,molecular_function,0.3944,0.033,0.3297,0.4591,0.895087,0.534165
+RPS6KA3,HGNC:19404,cytosol,GO:0005829,cellular_component,0.1998,0.0289,0.1432,0.2564,0.201986,0.122314
+RPS6KA3,HGNC:8031,protein autophosphorylation,GO:0046777,biological_process,0.1207,0.0183,0.0848,0.1566,1.0,0.777215
+RPS6KA3,HGNC:3426,Ras protein signal transduction,GO:0007265,biological_process,0.6478,0.0401,0.5692,0.7264,0.313154,0.292721
+RPS6KA3,HGNC:3876,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.3212,0.0242,0.2738,0.3686,1.0,0.899692
+RPS6KA3,HGNC:19022,metal ion binding,GO:0046872,molecular_function,0.5363,0.0448,0.4485,0.6241,1.0,0.967886
+RPS6KA3,HGNC:6704,protein phosphorylation,GO:0006468,biological_process,0.8262,0.0394,0.749,0.9034,0.000613,0.000216
+RPS6KA3,HGNC:7585,positive regulation of MAPK cascade,GO:0043410,biological_process,0.5262,0.0173,0.4923,0.5601,0.548082,0.513668
+RPS6KA3,HGNC:16315,Golgi apparatus,GO:0005794,cellular_component,0.5252,0.0205,0.485,0.5654,0.503158,0.244369
+RPS6KA3,HGNC:3825,cell cycle,GO:0007049,biological_process,0.5322,0.0304,0.4726,0.5918,1.0,0.55613
+RPS6KA3,HGNC:14416,GTP binding,GO:0005525,molecular_function,0.0894,0.0276,0.0353,0.1435,0.688618,0.404178
+RPS6KA3,HGNC:6962,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.8165,0.0185,0.7802,0.8528,7.3e-05,2.9e-05
+RPS6KA3,HGNC:2815,intracellular signal transduction,GO:0035556,biological_process,0.5107,0.047,0.4186,0.6028,0.26258,0.137743
+RPS6KA3,HGNC:8388,kinase activity,GO:0016301,molecular_function,0.5488,0.028,0.4939,0.6037,1.0,0.522921
+RPS6KA3,HGNC:3584,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.2576,0.0356,0.1878,0.3274,1.0,0.941495
+RPS6KA3,HGNC:18481,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.2004,0.0251,0.1512,0.2496,0.936481,0.638707
+ELK1,HGNC:18877,cytosol,GO:0005829,cellular_component,0.3,0.0284,0.2443,0.3557,1.0,0.642601
+ELK1,HGNC:10746,protein autophosphorylation,GO:0046777,biological_process,0.2238,0.012,0.2003,0.2473,1.0,0.957084
+ELK1,HGNC:14619,Golgi apparatus,GO:0005794,cellular_component,0.3221,0.0319,0.2596,0.3846,0.793948,0.691727
+ELK1,HGNC:12317,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.3406,0.0232,0.2951,0.3861,0.504604,0.211983
+ELK1,HGNC:19404,membrane,GO:0016020,cellular_component,0.6352,0.0246,0.587,0.6834,0.225251,0.139458
+ELK1,HGNC:2658,ATP binding,GO:0005524,molecular_function,0.1137,0.0378,0.0396,0.1878,0.276728,0.24932
+ELK1,HGNC:9135,protein phosphorylation,GO:0006468,biological_process,0.2241,0.0376,0.1504,0.2978,0.840657,0.390308
+ELK1,HGNC:7220,Ras protein signal transduction,GO:0007265,biological_process,0.6276,0.039,0.5512,0.704,1.0,0.903288
+ELK1,HGNC:17343,positive regulation of cell population proliferation,GO:0008284,biological_process,0.5079,0.0085,0.4912,0.5246,0.972541,0.503283
+ELK1,HGNC:8888,cytoskeleton,GO:0005856,cellular_component,0.5774,0.0384,0.5021,0.6527,0.907282,0.502397
+ELK1,HGNC:17216,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.1791,0.0354,0.1097,0.2485,0.32745,0.359366
+ELK1,HGNC:4522,GTP binding,GO:0005525,molecular_function,0.4085,0.0262,0.3571,0.4599,0.690728,0.844421
+ELK1,HGNC:14213,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.3086,0.0227,0.2641,0.3531,1.0,0.883631
+ELK1,HGNC:3409,positive regulation of MAPK cascade,GO:0043410,biological_process,0.2696,0.0241,0.2224,0.3168,0.820101,0.406576
+ELK1,HGNC:4893,enzyme binding,GO:0019899,molecular_function,0.2818,0.0272,0.2285,0.3351,0.916117,0.455851
+ELK1,HGNC:12980,apoptotic process,GO:0006915,biological_process,0.1272,0.0094,0.1088,0.1456,0.214309,0.105715
+ELK1,HGNC:17386,MAP kinase activity,GO:0004707,molecular_function,0.503,0.051,0.403,0.603,0.397583,0.207067
+FOS,HGNC:19445,protein phosphorylation,GO:0006468,biological_process,0.4936,0.0203,0.4538,0.5334,0.603648,0.306242
+FOS,HGNC:4591,cytoskeleton,GO:0005856,cellular_component,0.2299,0.0461,0.1395,0.3203,1.0,0.817591
+FOS,HGNC:1873,positive regulation of MAPK cascade,GO:0043410,biological_process,0.6379,0.0347,0.5699,0.7059,1.0,0.587865
+FOS,HGNC:19955,ATP binding,GO:0005524,molecular_function,0.4081,0.0146,0.3795,0.4367,0.611868,0.272875
+FOS,HGNC:13458,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.3966,0.0247,0.3482,0.445,1.0,0.724186
+FOS,HGNC:4601,nucleus,GO:0005634,cellular_component,0.1387,0.0269,0.086,0.1914,0.594638,0.68392
+FOS,HGNC:17443,enzyme binding,GO:0019899,molecular_function,0.1645,0.021,0.1233,0.2057,0.557643,0.446628
+FOS,HGNC:3040,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.515,0.035,0.4464,0.5836,1.0,0.921316
+FOS,HGNC:13347,Golgi apparatus,GO:0005794,cellular_component,0.4735,0.0029,0.4678,0.4792,0.969732,0.523496
+FOS,HGNC:12217,protein autophosphorylation,GO:0046777,biological_process,0.2383,0.0168,0.2054,0.2712,0.509274,0.181451
+FOS,HGNC:9662,plasma membrane,GO:0005886,cellular_component,0.3778,0.0402,0.299,0.4566,1.0,0.67911
+FOS,HGNC:19287,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.416,0.0188,0.3792,0.4528,0.268928,0.200342
+FOS,HGNC:17023,cytoplasm,GO:0005737,cellular_component,0.2291,0.0471,0.1368,0.3214,1.0,0.942071
+FOS,HGNC:9960,positive regulation of cell population proliferation,GO:0008284,biological_process,0.2402,0.0281,0.1851,0.2953,1.0,0.355315
+FOS,HGNC:12309,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.2227,0.0095,0.2041,0.2413,0.963657,0.577742
+FOS,HGNC:10425,metal ion binding,GO:0046872,molecular_function,0.6228,0.0243,0.5752,0.6704,1.0,0.80657
+JUN,HGNC:16479,protein kinase activity,GO:0004672,molecular_function,0.5931,0.0305,0.5333,0.6529,0.356342,0.233415
+JUN,HGNC:19033,metal ion binding,GO:0046872,molecular_function,0.1103,0.0346,0.0425,0.1781,0.627259,0.773058
+JUN,HGNC:7535,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.6367,0.0182,0.601,0.6724,0.307194,0.166362
+JUN,HGNC:2938,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.5035,0.0131,0.4778,0.5292,0.420339,0.294373
+JUN,HGNC:2222,activation of MAPK activity,GO:0000187,biological_process,0.5948,0.0189,0.5578,0.6318,0.235657,0.098566
+JUN,HGNC:6760,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.5979,0.0244,0.5501,0.6457,0.502452,0.183314
+JUN,HGNC:10485,positive regulation of gene expression,GO:0010628,biological_process,0.6104,0.0391,0.5338,0.687,0.055626,0.045976
+JUN,HGNC:4516,nucleus,GO:0005634,cellular_component,0.576,0.0149,0.5468,0.6052,0.039297,0.019174
+JUN,HGNC:5397,positive regulation of MAPK cascade,GO:0043410,biological_process,0.6071,0.0163,0.5752,0.639,0.667496,0.341692
+JUN,HGNC:4691,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.5606,0.0341,0.4938,0.6274,0.579457,0.473341
+JUN,HGNC:12046,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.2484,0.0205,0.2082,0.2886,0.609784,0.733808
+JUN,HGNC:6750,protein binding,GO:0005515,molecular_function,0.5245,0.0172,0.4908,0.5582,1.0,0.572103
+JUN,HGNC:14134,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.4166,0.0212,0.375,0.4582,0.977279,0.642339
+JUN,HGNC:11603,cell cycle,GO:0007049,biological_process,0.4516,0.0359,0.3812,0.522,0.214029,0.192933
+JUN,HGNC:11801,kinase activity,GO:0016301,molecular_function,0.6115,0.0219,0.5686,0.6544,0.023255,0.016762
+JUN,HGNC:12781,Ras protein signal transduction,GO:0007265,biological_process,0.2312,0.0373,0.1581,0.3043,0.59878,0.725654
+JUN,HGNC:17466,ATP binding,GO:0005524,molecular_function,0.4657,0.0363,0.3946,0.5368,0.120977,0.071503
+MYC,HGNC:17563,cell cycle,GO:0007049,biological_process,0.9274,0.0342,0.8604,0.9944,9.2e-05,3.5e-05
+MYC,HGNC:18050,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.1713,0.0276,0.1172,0.2254,0.628974,0.541294
+MYC,HGNC:15597,protein binding,GO:0005515,molecular_function,0.3151,0.0276,0.261,0.3692,1.0,0.683492
+MYC,HGNC:15968,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.5352,0.0187,0.4985,0.5719,0.885281,0.458898
+MYC,HGNC:9338,nucleoplasm,GO:0005654,cellular_component,0.3883,0.026,0.3373,0.4393,0.477542,0.563209
+MYC,HGNC:2484,positive regulation of MAPK cascade,GO:0043410,biological_process,0.5399,0.0224,0.496,0.5838,1.0,0.748346
+MYC,HGNC:16468,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.3042,0.0266,0.2521,0.3563,1.0,0.703381
+MYC,HGNC:14774,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.069,0.0291,0.012,0.126,1.0,0.414778
+MYC,HGNC:3629,enzyme binding,GO:0019899,molecular_function,0.2747,0.0088,0.2575,0.2919,1.0,0.89242
+MYC,HGNC:12395,Golgi apparatus,GO:0005794,cellular_component,0.4596,0.0371,0.3869,0.5323,1.0,0.665175
+MYC,HGNC:1113,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.1212,0.0259,0.0704,0.172,1.0,0.992918
+MYC,HGNC:18840,intracellular signal transduction,GO:0035556,biological_process,0.5037,0.0332,0.4386,0.5688,1.0,0.978706
+MYC,HGNC:7176,activation of MAPK activity,GO:0000187,biological_process,0.3045,0.0314,0.243,0.366,0.43994,0.385484
+MYC,HGNC:14737,protein kinase activity,GO:0004672,molecular_function,0.6124,0.041,0.532,0.6928,0.762895,0.727774
+MYC,HGNC:2100,positive regulation of gene expression,GO:0010628,biological_process,0.8472,0.0145,0.8188,0.8756,0.000185,0.000195
+MYC,HGNC:15383,innate immune response,GO:0045087,biological_process,0.3179,0.0352,0.2489,0.3869,0.605963,0.675303
+MYC,HGNC:2849,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.1906,0.0246,0.1424,0.2388,0.607808,0.225097
+MYC,HGNC:19922,ATP binding,GO:0005524,molecular_function,0.1341,0.0322,0.071,0.1972,1.0,0.993549
+MYC,HGNC:10888,apoptotic process,GO:0006915,biological_process,0.4088,0.0522,0.3065,0.5111,1.0,0.675807
+MYC,HGNC:19242,cytoskeleton,GO:0005856,cellular_component,0.5758,0.0198,0.537,0.6146,1.0,0.985839
+MYC,HGNC:14998,MAP kinase kinase activity,GO:0004708,molecular_function,0.6191,0.0286,0.563,0.6752,1.0,0.880917
+MYC,HGNC:18185,protein phosphorylation,GO:0006468,biological_process,0.3835,0.022,0.3404,0.4266,0.092438,0.056415
+MYC,HGNC:13335,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.2412,0.0419,0.1591,0.3233,0.476315,0.422161
+MYC,HGNC:5730,cytoplasm,GO:0005737,cellular_component,0.1603,0.0304,0.1007,0.2199,1.0,0.542549
+DUSP1,HGNC:11910,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.4529,0.0371,0.3802,0.5256,0.283206,0.224846
+DUSP1,HGNC:16693,cytoplasm,GO:0005737,cellular_component,0.2319,0.0315,0.1702,0.2936,1.0,0.909904
+DUSP1,HGNC:13996,kinase activity,GO:0016301,molecular_function,0.5987,0.0363,0.5276,0.6698,1.0,0.69867
+DUSP1,HGNC:12772,Golgi apparatus,GO:0005794,cellular_component,0.5991,0.0316,0.5372,0.661,1.0,0.556558
+DUSP1,HGNC:16270,membrane,GO:0016020,cellular_component,0.2351,0.0203,0.1953,0.2749,1.0,0.366048
+DUSP1,HGNC:13147,nucleus,GO:0005634,cellular_component,0.1092,0.0112,0.0872,0.1312,1.0,0.981505
+DUSP1,HGNC:5781,positive regulation of MAPK cascade,GO:0043410,biological_process,0.2378,0.0336,0.1719,0.3037,0.149251,0.055258
+DUSP1,HGNC:7428,GTP binding,GO:0005525,molecular_function,0.0597,0.0162,0.0279,0.0915,0.808456,0.557778
+DUSP1,HGNC:17361,innate immune response,GO:0045087,biological_process,0.2479,0.022,0.2048,0.291,1.0,0.386041
+DUSP1,HGNC:17075,plasma membrane,GO:0005886,cellular_component,0.3804,0.0211,0.339,0.4218,1.0,0.94403
+DUSP1,HGNC:5586,apoptotic process,GO:0006915,biological_process,0.3265,0.0445,0.2393,0.4137,1.0,0.735445
+DUSP1,HGNC:2924,protein autophosphorylation,GO:0046777,biological_process,0.4822,0.0408,0.4022,0.5622,1.0,0.493433
+DUSP1,HGNC:2589,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.3644,0.0238,0.3178,0.411,0.810016,0.840678
+DUSP1,HGNC:1299,protein phosphorylation,GO:0006468,biological_process,0.6528,0.0197,0.6142,0.6914,0.001277,0.000542
+DUSP1,HGNC:16833,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.1812,0.0432,0.0965,0.2659,1.0,0.46145
+DUSP1,HGNC:14478,intracellular signal transduction,GO:0035556,biological_process,0.4456,0.0353,0.3764,0.5148,0.050403,0.025574
+DUSP1,HGNC:15109,nucleoplasm,GO:0005654,cellular_component,0.0571,0.0257,0.0067,0.1075,0.447442,0.534123
+DUSP1,HGNC:4156,positive regulation of gene expression,GO:0010628,biological_process,0.5337,0.0572,0.4216,0.6458,0.942947,0.910676
+DUSP1,HGNC:14005,enzyme binding,GO:0019899,molecular_function,0.3646,0.0244,0.3168,0.4124,0.392666,0.248559
+DUSP1,HGNC:8969,Ras protein signal transduction,GO:0007265,biological_process,0.0974,0.0248,0.0488,0.146,1.0,0.959705
+DUSP1,HGNC:2038,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.6441,0.0222,0.6006,0.6876,0.522846,0.233599
+DUSP1,HGNC:2838,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.1061,0.0122,0.0822,0.13,0.777088,0.385471
+DUSP1,HGNC:11855,MAP kinase activity,GO:0004707,molecular_function,0.432,0.0468,0.3403,0.5237,1.0,0.705817
+DUSP1,HGNC:18306,protein binding,GO:0005515,molecular_function,0.3895,0.0396,0.3119,0.4671,0.8678,0.859381
+DUSP1,HGNC:9883,ATP binding,GO:0005524,molecular_function,0.6015,0.0425,0.5182,0.6848,0.486081,0.237469
+DUSP1,HGNC:18794,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.0779,0.0211,0.0365,0.1193,0.237128,0.083605
+DUSP1,HGNC:5724,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.3881,0.0378,0.314,0.4622,0.12411,0.042573
+DUSP1,HGNC:3521,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.5014,0.0262,0.45,0.5528,1.0,0.715584
+DUSP1,HGNC:18713,cytosol,GO:0005829,cellular_component,0.2296,0.0122,0.2057,0.2535,1.0,0.568319
+DUSP6,HGNC:13454,GTP binding,GO:0005525,molecular_function,0.3818,0.0221,0.3385,0.4251,0.461299,0.381673
+DUSP6,HGNC:6053,positive regulation of MAPK cascade,GO:0043410,biological_process,0.1014,0.0347,0.0334,0.1694,0.610282,0.62243
+DUSP6,HGNC:13767,positive regulation of cell population proliferation,GO:0008284,biological_process,0.278,0.0149,0.2488,0.3072,0.895634,0.786051
+DUSP6,HGNC:9839,cytosol,GO:0005829,cellular_component,0.24,0.0386,0.1643,0.3157,0.183831,0.115485
+DUSP6,HGNC:19251,protein kinase activity,GO:0004672,molecular_function,0.1113,0.0303,0.0519,0.1707,0.168564,0.096424
+DUSP6,HGNC:11630,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.3828,0.0392,0.306,0.4596,0.415927,0.413964
+DUSP6,HGNC:3775,apoptotic process,GO:0006915,biological_process,0.5682,0.0315,0.5065,0.6299,0.038,0.022217
+DUSP6,HGNC:9811,MAP kinase activity,GO:0004707,molecular_function,0.494,0.0174,0.4599,0.5281,0.000247,0.000211
+DUSP6,HGNC:16867,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.2307,0.0398,0.1527,0.3087,0.860093,0.498193
+DUSP6,HGNC:17246,kinase activity,GO:0016301,molecular_function,0.5196,0.0341,0.4528,0.5864,1.0,0.367514
+DUSP6,HGNC:11886,protein phosphorylation,GO:0006468,biological_process,0.4063,0.0367,0.3344,0.4782,0.587857,0.203593
+DUSP6,HGNC:15425,protein autophosphorylation,GO:0046777,biological_process,0.555,0.0353,0.4858,0.6242,1.0,0.386091
+DUSP6,HGNC:11507,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.2508,0.0472,0.1583,0.3433,0.898623,0.817321
+DUSP6,HGNC:6820,cytoskeleton,GO:0005856,cellular_component,0.4119,0.0091,0.3941,0.4297,1.0,0.698339
+DUSP6,HGNC:19870,nucleoplasm,GO:0005654,cellular_component,0.6287,0.026,0.5777,0.6797,1.0,0.969038
+DUSP6,HGNC:13875,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.5192,0.0449,0.4312,0.6072,0.471219,0.332627
+DUSP6,HGNC:19025,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.269,0.0407,0.1892,0.3488,1.0,0.932746
+DUSP6,HGNC:7869,metal ion binding,GO:0046872,molecular_function,0.0661,0.0627,0,0.189,1.0,0.729941
+DUSP6,HGNC:14406,MAPK cascade,GO:0000165,biological_process,0.7269,0.0331,0.662,0.7918,0.008269,0.003242
+DUSP6,HGNC:14865,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.4538,0.0275,0.3999,0.5077,0.168346,0.147787
+DUSP6,HGNC:16703,membrane,GO:0016020,cellular_component,0.5234,0.0372,0.4505,0.5963,0.247972,0.083225
+DUSP6,HGNC:2204,MAP kinase kinase activity,GO:0004708,molecular_function,0.3993,0.0479,0.3054,0.4932,0.927262,0.539024
+DUSP6,HGNC:18593,innate immune response,GO:0045087,biological_process,0.5244,0.0207,0.4838,0.565,1.0,0.365934
+DUSP6,HGNC:6450,cell cycle,GO:0007049,biological_process,0.4063,0.0358,0.3361,0.4765,1.0,0.915257
+DUSP6,HGNC:14094,intracellular signal transduction,GO:0035556,biological_process,0.4382,0.0348,0.37,0.5064,0.15962,0.053854
+SPRY2,HGNC:7778,MAP kinase activity,GO:0004707,molecular_function,0.1196,0.0354,0.0502,0.189,1.0,0.941269
+SPRY2,HGNC:15825,apoptotic process,GO:0006915,biological_process,0.3627,0.0367,0.2908,0.4346,0.360058,0.354817
+SPRY2,HGNC:4583,MAPK cascade,GO:0000165,biological_process,0.6694,0.0377,0.5955,0.7433,0.000953,0.000357
+SPRY2,HGNC:6247,membrane,GO:0016020,cellular_component,0.4563,0.0374,0.383,0.5296,0.204455,0.172711
+SPRY2,HGNC:14272,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.2486,0.0292,0.1914,0.3058,0.784929,0.432106
+SPRY2,HGNC:7465,regulation of stress-activated MAPK cascade,GO:0032872,biological_process,0.4279,0.0245,0.3799,0.4759,0.471184,0.194523
+SPRY2,HGNC:8038,cytosol,GO:0005829,cellular_component,0.3197,0.0216,0.2774,0.362,0.352467,0.435257
+SPRY2,HGNC:18592,plasma membrane,GO:0005886,cellular_component,0.1735,0.0313,0.1122,0.2348,0.772807,0.754802
+SPRY2,HGNC:9596,metal ion binding,GO:0046872,molecular_function,0.1622,0.0266,0.1101,0.2143,0.601105,0.332725
+SPRY2,HGNC:13862,intracellular signal transduction,GO:0035556,biological_process,0.4524,0.0385,0.3769,0.5279,0.818548,0.494589
+SPRY2,HGNC:6653,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.4022,0.0282,0.3469,0.4575,0.942873,0.354445
+SPRY2,HGNC:5389,nucleus,GO:0005634,cellular_component,0.5382,0.0259,0.4874,0.589,0.699325,0.708928
+SPRY2,HGNC:13232,GTP binding,GO:0005525,molecular_function,0.2379,0.0432,0.1532,0.3226,0.26029,0.246187
+SPRY2,HGNC:7086,ATP binding,GO:0005524,molecular_function,0.4661,0.0253,0.4165,0.5157,0.847922,0.515717
+SPRY2,HGNC:6676,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.342,0.0327,0.2779,0.4061,1.0,0.542005
+SPRY2,HGNC:2756,protein kinase activity,GO:0004672,molecular_function,0.3829,0.0355,0.3133,0.4525,0.886685,0.494746
+SPRY2,HGNC:7393,cytoplasm,GO:0005737,cellular_component,0.5693,0.0367,0.4974,0.6412,1.0,0.952324
+SPRY2,HGNC:14619,"positive regulation of transcription, DNA-templated",GO:0045893,biological_process,0.5391,0.0183,0.5032,0.575,1.0,0.964191
+SPRY2,HGNC:19526,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.4761,0.0296,0.4181,0.5341,0.524895,0.449413
+SPRY2,HGNC:6511,Golgi apparatus,GO:0005794,cellular_component,0.0685,0.0279,0.0138,0.1232,1.0,0.763446
+SPRY2,HGNC:17230,innate immune response,GO:0045087,biological_process,0.5184,0.0377,0.4445,0.5923,1.0,0.569994
+SPRY2,HGNC:13021,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.3798,0.043,0.2955,0.4641,0.318775,0.122079
+SPRY2,HGNC:15462,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.3752,0.0414,0.2941,0.4563,1.0,0.759218
+SPRY2,HGNC:10755,activation of MAPK activity,GO:0000187,biological_process,0.3778,0.0451,0.2894,0.4662,1.0,0.989878
+SPRY2,HGNC:3850,protein phosphorylation,GO:0006468,biological_process,0.5749,0.0413,0.494,0.6558,0.057757,0.041908
+NF1,HGNC:9181,cell cycle,GO:0007049,biological_process,0.6013,0.0335,0.5356,0.667,1.0,0.992561
+NF1,HGNC:13868,innate immune response,GO:0045087,biological_process,0.1377,0.0261,0.0865,0.1889,0.442213,0.328876
+NF1,HGNC:4050,activation of MAPK activity,GO:0000187,biological_process,0.3437,0.0288,0.2873,0.4001,1.0,0.581651
+NF1,HGNC:13093,protein kinase activity,GO:0004672,molecular_function,0.2917,0.0403,0.2127,0.3707,1.0,0.752304
+NF1,HGNC:4052,MAP kinase activity,GO:0004707,molecular_function,0.3228,0.0125,0.2983,0.3473,1.0,0.493164
+NF1,HGNC:12738,protein autophosphorylation,GO:0046777,biological_process,0.4886,0.0201,0.4492,0.528,1.0,0.463865
+NF1,HGNC:17210,positive regulation of MAPK cascade,GO:0043410,biological_process,0.5601,0.009,0.5425,0.5777,1.0,0.797721
+NF1,HGNC:19937,Golgi apparatus,GO:0005794,cellular_component,0.2111,0.0457,0.1215,0.3007,1.0,0.83006
+NF1,HGNC:2505,cytosol,GO:0005829,cellular_component,0.1284,0.0351,0.0596,0.1972,1.0,0.853898
+NF1,HGNC:5071,DNA-binding transcription factor activity,GO:0003700,molecular_function,0.1097,0.0094,0.0913,0.1281,1.0,0.786051
+NF1,HGNC:4058,Ras protein signal transduction,GO:0007265,biological_process,0.9059,0.0275,0.852,0.9598,0.0,0.0
+NF1,HGNC:13987,negative regulation of neuron apoptotic process,GO:0043524,biological_process,0.7371,0.0237,0.6906,0.7836,1e-06,1e-06
+NF1,HGNC:4118,intracellular signal transduction,GO:0035556,biological_process,0.4254,0.0303,0.366,0.4848,0.729193,0.728728
+NF1,HGNC:8411,positive regulation of gene expression,GO:0010628,biological_process,0.0507,0.0194,0.0127,0.0887,0.526357,0.482039
+NF1,HGNC:14838,nucleus,GO:0005634,cellular_component,0.3617,0.0392,0.2849,0.4385,0.480044,0.450616
+NF1,HGNC:3927,neurotrophin TRK receptor signaling pathway,GO:0048011,biological_process,0.4664,0.0305,0.4066,0.5262,0.629579,0.482923
+NF1,HGNC:5362,kinase activity,GO:0016301,molecular_function,0.4885,0.022,0.4454,0.5316,0.122731,0.111403
+NF1,HGNC:19457,positive regulation of cell population proliferation,GO:0008284,biological_process,0.4349,0.049,0.3389,0.5309,0.646692,0.680366
+NF1,HGNC:5960,plasma membrane,GO:0005886,cellular_component,0.0551,0.0151,0.0255,0.0847,1.0,0.65352
+NF1,HGNC:8118,positive regulation of protein serine/threonine kinase activity,GO:0071902,biological_process,0.6019,0.0359,0.5315,0.6723,1.0,0.619915
+NF1,HGNC:15070,protein serine/threonine kinase activity,GO:0004674,molecular_function,0.102,0.0302,0.0428,0.1612,0.180047,0.10946
+NF1,HGNC:3760,metal ion binding,GO:0046872,molecular_function,0.2387,0.0167,0.206,0.2714,0.209189,0.148432
+NF1,HGNC:1878,MAP kinase kinase kinase activity,GO:0004709,molecular_function,0.1989,0.0285,0.143,0.2548,1.0,0.604989
+NF1,HGNC:17965,positive regulation of protein phosphorylation,GO:0001934,biological_process,0.5587,0.0219,0.5158,0.6016,0.96866,0.661821
+NF1,HGNC:8842,positive regulation of MAP kinase activity,GO:0043406,biological_process,0.4142,0.0188,0.3774,0.451,0.496694,0.19676
+NF1,HGNC:3326,protein phosphorylation,GO:0006468,biological_process,0.3469,0.0391,0.2703,0.4235,0.230959,0.121616
+NF1,HGNC:19624,transmembrane receptor protein tyrosine kinase signaling pathway,GO:0007169,biological_process,0.367,0.0532,0.2627,0.4713,1.0,0.97792
+NF1,HGNC:16434,MAP kinase kinase activity,GO:0004708,molecular_function,0.3025,0.0281,0.2474,0.3576,0.650106,0.550893
+NF1,HGNC:2305,apoptotic process,GO:0006915,biological_process,0.6227,0.0337,0.5566,0.6888,1.0,0.772663

@@ -1,6 +1,5 @@
 """Backend module for running GeneWalk and parsing results."""
 
-import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -78,11 +77,6 @@ def find_results_csv(output_dir: Path) -> Path | None:
 def load_results(csv_path: Path) -> pd.DataFrame:
     """Load and clean GeneWalk results CSV."""
     df = pd.read_csv(csv_path)
-    # Ensure expected columns exist
-    expected = {"hgnc_symbol", "go_name", "go_id", "go_domain",
-                "sim", "sem_sim", "cilow", "ciupp",
-                "global_padj", "gene_padj"}
-    # Use whatever columns are available
     return df
 
 

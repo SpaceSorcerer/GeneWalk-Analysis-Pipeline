@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import networkx as nx
 
 
 def volcano_plot(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold: float = 0.05) -> go.Figure:
@@ -203,5 +204,117 @@ def pvalue_distribution(df: pd.DataFrame, padj_col: str = "gene_padj") -> go.Fig
         title="Distribution of Adjusted P-values",
         template="plotly_white",
         height=400,
+    )
+    return fig
+
+
+def gene_go_network(
+    df: pd.DataFrame,
+    genes: list[str] | None = None,
+    padj_col: str = "gene_padj",
+    padj_threshold: float = 0.05,
+    max_edges: int = 200,
+) -> go.Figure:
+    """Interactive network graph: genes connected to their significant GO terms."""
+    sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
+
+    if genes:
+        sig = sig[sig["hgnc_symbol"].isin(genes)]
+
+    if sig.empty:
+        return go.Figure().update_layout(title="No significant results to display")
+
+    # Limit edges for readability
+    if len(sig) > max_edges:
+        sig = sig.sort_values(padj_col, ascending=True).head(max_edges)
+
+    G = nx.Graph()
+
+    for _, row in sig.iterrows():
+        gene = row.get("hgnc_symbol", "")
+        go_term = row.get("go_name", "")
+        sim = row.get("sim", 0)
+        padj = row.get(padj_col, 1)
+        domain = row.get("go_domain", "unknown")
+        if not gene or not go_term:
+            continue
+        G.add_node(gene, node_type="gene")
+        G.add_node(go_term, node_type="go", domain=domain)
+        G.add_edge(gene, go_term, sim=sim, padj=padj)
+
+    if len(G.nodes) == 0:
+        return go.Figure().update_layout(title="No nodes to display")
+
+    pos = nx.spring_layout(G, k=1.8 / (len(G.nodes) ** 0.3), seed=42, iterations=60)
+
+    # Edges
+    edge_x, edge_y = [], []
+    for u, v in G.edges():
+        x0, y0 = pos[u]
+        x1, y1 = pos[v]
+        edge_x += [x0, x1, None]
+        edge_y += [y0, y1, None]
+
+    edge_trace = go.Scatter(
+        x=edge_x, y=edge_y,
+        mode="lines",
+        line={"width": 0.5, "color": "#C0C0C0"},
+        hoverinfo="none",
+    )
+
+    # Gene nodes
+    gene_nodes = [n for n, d in G.nodes(data=True) if d.get("node_type") == "gene"]
+    gene_x = [pos[n][0] for n in gene_nodes]
+    gene_y = [pos[n][1] for n in gene_nodes]
+    gene_sizes = [8 + 2 * G.degree(n) for n in gene_nodes]
+    gene_hover = [f"<b>{n}</b><br>Connections: {G.degree(n)}" for n in gene_nodes]
+
+    gene_trace = go.Scatter(
+        x=gene_x, y=gene_y,
+        mode="markers+text",
+        marker={"size": gene_sizes, "color": "#D9534F", "line": {"width": 1, "color": "#fff"}},
+        text=gene_nodes,
+        textposition="top center",
+        textfont={"size": 9, "color": "#333"},
+        hovertext=gene_hover,
+        hoverinfo="text",
+        name="Genes",
+    )
+
+    # GO term nodes -- color by domain
+    domain_color = {
+        "biological_process": "#4A90D9",
+        "molecular_function": "#F0AD4E",
+        "cellular_component": "#5CB85C",
+        "unknown": "#999",
+    }
+    go_nodes = [n for n, d in G.nodes(data=True) if d.get("node_type") == "go"]
+    go_x = [pos[n][0] for n in go_nodes]
+    go_y = [pos[n][1] for n in go_nodes]
+    go_colors = [domain_color.get(G.nodes[n].get("domain", "unknown"), "#999") for n in go_nodes]
+    go_sizes = [6 + 1.5 * G.degree(n) for n in go_nodes]
+    go_hover = [
+        f"<b>{n}</b><br>Domain: {G.nodes[n].get('domain', '?')}<br>Connections: {G.degree(n)}"
+        for n in go_nodes
+    ]
+
+    go_trace = go.Scatter(
+        x=go_x, y=go_y,
+        mode="markers",
+        marker={"size": go_sizes, "color": go_colors, "line": {"width": 0.5, "color": "#fff"}},
+        hovertext=go_hover,
+        hoverinfo="text",
+        name="GO Terms",
+    )
+
+    fig = go.Figure(data=[edge_trace, go_trace, gene_trace])
+    fig.update_layout(
+        title="Gene-GO Term Network",
+        template="plotly_white",
+        showlegend=True,
+        height=650,
+        xaxis={"visible": False},
+        yaxis={"visible": False},
+        hovermode="closest",
     )
     return fig

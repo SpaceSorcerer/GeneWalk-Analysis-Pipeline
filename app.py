@@ -11,7 +11,6 @@ import pandas as pd
 import streamlit as st
 
 from genewalk_app.runner import (
-    DEFAULT_BASE_DIR,
     filter_results,
     find_results_csv,
     get_gene_summary,
@@ -21,6 +20,7 @@ from genewalk_app.runner import (
 )
 from genewalk_app.visualizations import (
     gene_bar_chart,
+    gene_go_network,
     gene_similarity_heatmap,
     go_domain_pie,
     pvalue_distribution,
@@ -29,6 +29,7 @@ from genewalk_app.visualizations import (
 )
 
 SAMPLE_GENES_PATH = Path(__file__).parent / "sample_data" / "sample_genes.txt"
+SAMPLE_RESULTS_PATH = Path(__file__).parent / "sample_data" / "sample_genewalk_results.csv"
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -45,12 +46,20 @@ st.set_page_config(
 st.sidebar.title("GeneWalk Analysis")
 st.sidebar.markdown("Upload a gene list, configure parameters, and run GeneWalk.")
 
+# ---------------------------------------------------------------------------
+# Session state (must be initialized before any code that reads it)
+# ---------------------------------------------------------------------------
+if "results_df" not in st.session_state:
+    st.session_state.results_df = None
+if "run_log" not in st.session_state:
+    st.session_state.run_log = None
+
 st.sidebar.markdown("---")
 st.sidebar.subheader("1. Gene List Input")
 
 input_method = st.sidebar.radio(
     "Choose input method",
-    ["Upload file", "Paste genes", "Use sample data"],
+    ["Upload file", "Paste genes", "Use sample data (with demo results)"],
 )
 
 genes: list[str] = []
@@ -74,6 +83,9 @@ else:
     if SAMPLE_GENES_PATH.exists():
         genes = [g.strip() for g in SAMPLE_GENES_PATH.read_text().splitlines() if g.strip()]
         st.sidebar.info(f"Loaded {len(genes)} sample genes (MAPK/ERK pathway)")
+    if SAMPLE_RESULTS_PATH.exists() and st.session_state.results_df is None:
+        st.session_state.results_df = pd.read_csv(SAMPLE_RESULTS_PATH)
+        st.session_state.run_log = "Demo results loaded from sample data."
 
 if genes:
     st.sidebar.success(f"{len(genes)} genes loaded")
@@ -112,14 +124,6 @@ uploaded_results = st.sidebar.file_uploader(
     type=["csv"],
     key="results_upload",
 )
-
-# ---------------------------------------------------------------------------
-# Session state
-# ---------------------------------------------------------------------------
-if "results_df" not in st.session_state:
-    st.session_state.results_df = None
-if "run_log" not in st.session_state:
-    st.session_state.run_log = None
 
 # Handle uploaded results
 if uploaded_results is not None:
@@ -239,10 +243,13 @@ m2.metric("Significant pairs", f"{len(filtered):,}")
 m3.metric("Unique genes", f"{filtered['hgnc_symbol'].nunique() if 'hgnc_symbol' in filtered.columns else 'N/A'}")
 m4.metric("Unique GO terms", f"{filtered['go_name'].nunique() if 'go_name' in filtered.columns else 'N/A'}")
 
+# --- Available genes (shared across tabs) ---
+available_genes = sorted(df["hgnc_symbol"].dropna().unique().tolist()) if "hgnc_symbol" in df.columns else []
+
 # --- Tabs for visualizations ---
 st.markdown("---")
-tab_overview, tab_gene, tab_heatmap, tab_table = st.tabs(
-    ["Overview", "Per-Gene Explorer", "Heatmap", "Data Table"]
+tab_overview, tab_gene, tab_network, tab_heatmap, tab_table = st.tabs(
+    ["Overview", "Per-Gene Explorer", "Network", "Heatmap", "Data Table"]
 )
 
 # ---- Tab: Overview ----
@@ -275,8 +282,6 @@ with tab_overview:
 
 # ---- Tab: Per-Gene Explorer ----
 with tab_gene:
-    available_genes = sorted(df["hgnc_symbol"].dropna().unique().tolist()) if "hgnc_symbol" in df.columns else []
-
     if available_genes:
         selected_gene = st.selectbox("Select a gene", available_genes)
         top_n = st.slider("Number of GO terms to show", 5, 50, 20)
@@ -291,6 +296,35 @@ with tab_gene:
         if padj_col in gene_data.columns:
             gene_data = gene_data.sort_values(padj_col)
         st.dataframe(gene_data, use_container_width=True, height=300)
+    else:
+        st.info("No gene symbols found in results.")
+
+# ---- Tab: Network ----
+with tab_network:
+    if available_genes:
+        net_genes = st.multiselect(
+            "Select genes for network (leave empty for top significant)",
+            available_genes,
+            default=available_genes[:6] if len(available_genes) >= 6 else available_genes,
+            key="net_genes",
+        )
+        max_edges = st.slider("Max edges", 50, 500, 200, key="net_edges")
+
+        st.plotly_chart(
+            gene_go_network(
+                df,
+                genes=net_genes or None,
+                padj_col=padj_col if padj_col != "(none)" else "gene_padj",
+                padj_threshold=padj_threshold,
+                max_edges=max_edges,
+            ),
+            use_container_width=True,
+        )
+        st.caption(
+            "Red nodes = genes, colored nodes = GO terms "
+            "(blue = biological process, orange = molecular function, green = cellular component). "
+            "Node size scales with number of connections."
+        )
     else:
         st.info("No gene symbols found in results.")
 
