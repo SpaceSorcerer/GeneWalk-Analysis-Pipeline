@@ -396,6 +396,18 @@ in your specific biological context.</li>
 co-expression network analyses.</li>
 </ul>
 
+<h4>Should I combine up- and down-regulated genes?</h4>
+<p><strong>Yes &mdash; combine them into one list</strong> in most cases. GeneWalk does not
+use fold-change direction. It builds a network from your gene set and asks
+<em>&ldquo;which functions of these genes are relevant in this biological
+context?&rdquo;</em> &mdash; not whether genes went up or down. A larger combined list
+also gives the random-walk algorithm richer network context, which improves the quality
+of the embeddings.</p>
+<p>The main reason to run <strong>separate lists</strong> is if you have a specific hypothesis
+about activated vs. suppressed functions and want to compare two GeneWalk outputs
+side-by-side. Just make sure each list has at least ~10 genes &mdash; very small lists
+may not provide enough context for meaningful results.</p>
+
 <h4>Tips for good input</h4>
 <ul>
 <li><strong>10&ndash;200 genes</strong> is the sweet spot. Fewer than 5 may not produce
