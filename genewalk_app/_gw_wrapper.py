@@ -12,7 +12,12 @@ Usage (from subprocess):
     python -m genewalk_app._gw_wrapper --project my_project --genes genes.txt ...
 """
 
+import os
 import urllib.request
+
+# Force UTF-8 for all file I/O. On Windows, Python defaults to cp1252 which
+# cannot encode certain Unicode characters used in GeneWalk's HTML reports.
+os.environ["PYTHONUTF8"] = "1"
 
 
 def _install_opener():

@@ -1,11 +1,25 @@
 """Backend module for running GeneWalk and parsing results."""
 
+import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
 import pandas as pd
+
+
+def _utf8_env() -> dict[str, str]:
+    """Return a copy of the current environment with PYTHONUTF8=1.
+
+    On Windows, Python defaults to cp1252 encoding for file I/O.  GeneWalk's
+    HTML report generation uses Unicode characters that cp1252 cannot encode,
+    causing a crash.  Setting PYTHONUTF8=1 forces Python to use UTF-8 for all
+    file I/O in the subprocess.
+    """
+    env = os.environ.copy()
+    env["PYTHONUTF8"] = "1"
+    return env
 
 
 DEFAULT_BASE_DIR = Path(tempfile.gettempdir()) / "genewalk_runs"
@@ -31,7 +45,7 @@ def is_genewalk_available() -> bool:
     """Return True if the GeneWalk CLI can be invoked."""
     try:
         cmd = _genewalk_base_cmd() + ["--help"]
-        subprocess.run(cmd, capture_output=True, timeout=15)
+        subprocess.run(cmd, capture_output=True, timeout=15, env=_utf8_env())
         return True
     except (FileNotFoundError, subprocess.TimeoutExpired):
         return False
@@ -78,6 +92,7 @@ def run_genewalk(
             capture_output=True,
             text=True,
             timeout=14400,  # 4 hour timeout
+            env=_utf8_env(),
         )
     except FileNotFoundError:
         return {

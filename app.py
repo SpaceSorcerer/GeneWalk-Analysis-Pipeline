@@ -130,6 +130,14 @@ with st.sidebar:
                                  help="Names the output directory. Use something descriptive "
                                       "like 'mapk_screen' or 'patient_deg_analysis'.")
 
+    output_folder = st.text_input(
+        "Output folder",
+        value="",
+        help="Where to save GeneWalk results. Leave blank to use the system temp "
+             "directory. Examples: C:\\Users\\you\\genewalk_output or ~/genewalk_output",
+        placeholder="Leave blank for default (system temp)",
+    )
+
     st.markdown("---")
     genewalk_installed = is_genewalk_available()
     if not genewalk_installed:
@@ -165,6 +173,7 @@ if run_clicked and genes:
         tmp = Path(tempfile.mkdtemp())
         gene_file = save_gene_list(genes, tmp / "genes.txt")
 
+        base_folder = Path(output_folder).expanduser() if output_folder.strip() else None
         st.write(f"Starting GeneWalk with {nproc} cores, {nreps_graph} graph reps, "
                  f"{nreps_null} null reps...")
         result = run_genewalk(
@@ -175,6 +184,7 @@ if run_clicked and genes:
             nreps_graph=nreps_graph,
             nreps_null=nreps_null,
             alpha_fdr=alpha_fdr,
+            base_folder=base_folder,
         )
 
         st.session_state.run_log = (
@@ -183,15 +193,28 @@ if run_clicked and genes:
             f"```\n{result['stderr'][-3000:] if result['stderr'] else '(no stderr)'}\n```"
         )
 
+        csv_path = find_results_csv(result["output_dir"])
         if result["return_code"] == 0:
-            csv_path = find_results_csv(result["output_dir"])
             if csv_path:
                 st.session_state.results_df = load_results(csv_path)
                 status.update(label="Analysis complete!", state="complete")
             else:
                 status.update(label="Results CSV not found", state="error")
         else:
-            status.update(label="GeneWalk exited with an error", state="error")
+            # GeneWalk crashed (e.g. during HTML report generation) but
+            # the results CSV may already have been written.
+            if csv_path:
+                st.session_state.results_df = load_results(csv_path)
+                st.session_state.run_log += (
+                    "\n\n**Note:** GeneWalk exited with an error (likely "
+                    "during HTML report generation), but the results CSV "
+                    "was found and loaded successfully."
+                )
+                status.update(
+                    label="Analysis complete (with warnings)", state="complete"
+                )
+            else:
+                status.update(label="GeneWalk exited with an error", state="error")
 
 # ---------------------------------------------------------------------------
 # Main content area
