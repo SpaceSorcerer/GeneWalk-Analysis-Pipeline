@@ -39,42 +39,9 @@ st.set_page_config(
     page_title="GeneWalk Analysis Pipeline",
     page_icon=":dna:",
     layout="wide",
+    initial_sidebar_state="expanded",
 )
 st.markdown(get_custom_css(), unsafe_allow_html=True)
-
-# Floating sidebar toggle button (visible only when sidebar is collapsed).
-# Uses st.html() which renders directly in the page (no iframe), so JS can
-# access the Streamlit DOM to click the native sidebar toggle.
-st.html("""
-<div id="sidebarOpenBtn" onclick="
-    var ctrl = document.querySelector('[data-testid=&quot;collapsedControl&quot;]');
-    if (ctrl) { ctrl.click(); }
-" style="
-    position: fixed; top: 14px; left: 14px; z-index: 999999;
-    background: linear-gradient(135deg, #2a6cb6, #1a365d);
-    color: white; border: none; border-radius: 8px;
-    padding: 8px 16px; cursor: pointer;
-    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 0.2s;
-    display: none; user-select: none;
-">&#9776; Open Sidebar</div>
-<script>
-(function() {
-    var btn = document.getElementById('sidebarOpenBtn');
-    function check() {
-        var sb = document.querySelector('[data-testid="stSidebar"]');
-        if (!sb || !btn) return;
-        var collapsed = sb.getAttribute('aria-expanded') === 'false';
-        btn.style.display = collapsed ? 'block' : 'none';
-    }
-    var sb = document.querySelector('[data-testid="stSidebar"]');
-    if (sb) { new MutationObserver(check).observe(sb, {attributes: true}); }
-    check();
-    // Also re-check after a short delay in case DOM isn't fully ready
-    setTimeout(check, 500);
-})();
-</script>
-""")
 
 # ---------------------------------------------------------------------------
 # Session state (must be initialized before any code that reads it)
@@ -245,16 +212,11 @@ if st.session_state.results_df is None:
         <div class="step-card">
             <div class="step-number">2</div>
             <h3>Configure &amp; Run</h3>
-            <p>Set your gene ID type and analysis parameters in the sidebar,
-            then click <strong>Run GeneWalk</strong>. Or upload a previous
-            <code>genewalk_results.csv</code>.</p>
+            <p>Set your gene ID type and analysis parameters in the sidebar
+            (&#9664;), then click <strong>Run GeneWalk</strong>. Or upload a
+            previous <code>genewalk_results.csv</code>.</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Open Sidebar", key="open_sidebar_btn_b", use_container_width=True):
-            st.html("""<script>
-                var ctrl = document.querySelector('[data-testid="collapsedControl"]');
-                if (ctrl) ctrl.click();
-            </script>""")
     with col_c:
         st.markdown("""
         <div class="step-card">
@@ -265,11 +227,6 @@ if st.session_state.results_df is None:
             CSV export.</p>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("Open Sidebar", key="open_sidebar_btn_c", use_container_width=True):
-            st.html("""<script>
-                var ctrl = document.querySelector('[data-testid="collapsedControl"]');
-                if (ctrl) ctrl.click();
-            </script>""")
 
     st.markdown("")
     st.markdown(

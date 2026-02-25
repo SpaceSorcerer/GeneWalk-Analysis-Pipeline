@@ -14,27 +14,11 @@ html, body, [class*="css"] {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Hide default Streamlit menu/footer for cleaner look, but keep header
-   visible so the native sidebar toggle arrow remains accessible. */
+/* Hide default Streamlit hamburger menu and footer for a cleaner look.
+   The header itself is left visible so the native sidebar toggle arrow
+   (">" in top-left) works normally across all Streamlit versions. */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-
-/* Make the header transparent instead of hidden so the sidebar toggle works */
-header[data-testid="stHeader"] {
-    background: transparent !important;
-    backdrop-filter: none !important;
-    border: none !important;
-}
-/* Hide the toolbar/decoration inside the header */
-header [data-testid="stToolbar"] {
-    display: none !important;
-}
-/* Ensure the sidebar toggle is always visible and prominent */
-[data-testid="collapsedControl"] {
-    display: block !important;
-    visibility: visible !important;
-    z-index: 999999;
-}
 
 /* Smooth scrolling */
 html { scroll-behavior: smooth; }
