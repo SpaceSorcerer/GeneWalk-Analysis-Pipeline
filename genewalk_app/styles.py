@@ -19,6 +19,36 @@ html, body, [class*="css"] {
 footer {visibility: hidden;}
 header {visibility: hidden;}
 
+/* Keep sidebar toggle visible even with header hidden */
+[data-testid="collapsedControl"] {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Floating sidebar open button (shown via JS when sidebar is collapsed) */
+.sidebar-open-btn {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 999999;
+    background: linear-gradient(135deg, #2a6cb6, #1a365d);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+    display: none;
+}
+.sidebar-open-btn:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+}
+
 /* Smooth scrolling */
 html { scroll-behavior: smooth; }
 

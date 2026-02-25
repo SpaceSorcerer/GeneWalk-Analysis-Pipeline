@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 from genewalk_app.runner import (
     filter_results,
@@ -41,6 +42,46 @@ st.set_page_config(
     layout="wide",
 )
 st.markdown(get_custom_css(), unsafe_allow_html=True)
+
+# Floating sidebar toggle button (visible only when sidebar is collapsed)
+components.html("""
+<button class="sidebar-open-btn" id="sidebarOpenBtn" onclick="openSidebar()">
+    &#9776; Open Sidebar
+</button>
+<script>
+function openSidebar() {
+    var ctrl = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+    if (ctrl) { ctrl.click(); }
+}
+function checkSidebar() {
+    var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    var btn = document.getElementById('sidebarOpenBtn');
+    if (!sidebar || !btn) return;
+    var collapsed = sidebar.getAttribute('aria-expanded') === 'false';
+    btn.style.display = collapsed ? 'block' : 'none';
+}
+var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+if (sidebar) {
+    new MutationObserver(checkSidebar).observe(sidebar, {attributes: true});
+}
+checkSidebar();
+</script>
+<style>
+.sidebar-open-btn {
+    position: fixed; top: 14px; left: 14px; z-index: 999999;
+    background: linear-gradient(135deg, #2a6cb6, #1a365d);
+    color: white; border: none; border-radius: 8px;
+    padding: 8px 16px; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: all 0.2s;
+    display: none;
+}
+.sidebar-open-btn:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    transform: translateY(-1px);
+}
+</style>
+""", height=0)
 
 # ---------------------------------------------------------------------------
 # Session state (must be initialized before any code that reads it)
@@ -198,6 +239,14 @@ if st.session_state.results_df is None:
             or try the built-in sample data (MAPK/ERK pathway).</p>
         </div>
         """, unsafe_allow_html=True)
+        if st.button("Try Sample Data", key="load_sample_btn", use_container_width=True,
+                      type="primary"):
+            if SAMPLE_RESULTS_PATH.exists():
+                st.session_state.results_df = pd.read_csv(SAMPLE_RESULTS_PATH)
+                st.session_state.run_log = "Demo results loaded from sample data."
+                st.rerun()
+            else:
+                st.error("Sample data files not found.")
     with col_b:
         st.markdown("""
         <div class="step-card">
@@ -208,6 +257,11 @@ if st.session_state.results_df is None:
             <code>genewalk_results.csv</code>.</p>
         </div>
         """, unsafe_allow_html=True)
+        if st.button("Open Sidebar", key="open_sidebar_btn_b", use_container_width=True):
+            components.html("""<script>
+                var ctrl = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+                if (ctrl) ctrl.click();
+            </script>""", height=0)
     with col_c:
         st.markdown("""
         <div class="step-card">
@@ -218,6 +272,11 @@ if st.session_state.results_df is None:
             CSV export.</p>
         </div>
         """, unsafe_allow_html=True)
+        if st.button("Open Sidebar", key="open_sidebar_btn_c", use_container_width=True):
+            components.html("""<script>
+                var ctrl = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+                if (ctrl) ctrl.click();
+            </script>""", height=0)
 
     st.markdown("")
     st.markdown(
