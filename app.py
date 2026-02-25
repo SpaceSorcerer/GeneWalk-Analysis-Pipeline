@@ -14,6 +14,7 @@ from genewalk_app.runner import (
     filter_results,
     find_results_csv,
     get_gene_summary,
+    is_genewalk_available,
     load_results,
     run_genewalk,
     save_gene_list,
@@ -130,7 +131,16 @@ with st.sidebar:
                                       "like 'mapk_screen' or 'patient_deg_analysis'.")
 
     st.markdown("---")
-    run_clicked = st.button("Run GeneWalk", type="primary", disabled=len(genes) == 0,
+    genewalk_installed = is_genewalk_available()
+    if not genewalk_installed:
+        st.warning(
+            "GeneWalk is not installed (or not found on PATH). "
+            "Install it with `pip install genewalk`. "
+            "You can still upload a previous results CSV below.",
+            icon="\u26a0\ufe0f",
+        )
+    run_clicked = st.button("Run GeneWalk", type="primary",
+                            disabled=len(genes) == 0 or not genewalk_installed,
                             use_container_width=True)
 
     st.markdown("---")

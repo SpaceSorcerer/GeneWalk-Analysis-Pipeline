@@ -1,6 +1,8 @@
 """Backend module for running GeneWalk and parsing results."""
 
+import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -8,6 +10,30 @@ import pandas as pd
 
 
 DEFAULT_BASE_DIR = Path(tempfile.gettempdir()) / "genewalk_runs"
+
+
+def _genewalk_base_cmd() -> list[str]:
+    """Resolve the GeneWalk command.
+
+    On Windows, pip sometimes installs entry-point scripts in a ``Scripts/``
+    directory that isn't on PATH (common with Microsoft Store Python).  When
+    the bare ``genewalk`` command isn't found we fall back to invoking the
+    module through the current Python interpreter.
+    """
+    if shutil.which("genewalk"):
+        return ["genewalk"]
+    # Fall back: run via the same Python that is running this app.
+    return [sys.executable, "-m", "genewalk.cli"]
+
+
+def is_genewalk_available() -> bool:
+    """Return True if the GeneWalk CLI can be invoked."""
+    try:
+        cmd = _genewalk_base_cmd() + ["--help"]
+        subprocess.run(cmd, capture_output=True, timeout=15)
+        return True
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return False
 
 
 def save_gene_list(genes: list[str], dest: Path) -> Path:
@@ -34,8 +60,7 @@ def run_genewalk(
     base = base_folder or DEFAULT_BASE_DIR
     base.mkdir(parents=True, exist_ok=True)
 
-    cmd = [
-        "genewalk",
+    cmd = _genewalk_base_cmd() + [
         "--project", project,
         "--genes", str(gene_file),
         "--id_type", id_type,
@@ -46,12 +71,26 @@ def run_genewalk(
         "--base_folder", str(base),
     ]
 
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        timeout=14400,  # 4 hour timeout
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=14400,  # 4 hour timeout
+        )
+    except FileNotFoundError:
+        return {
+            "return_code": 1,
+            "stdout": "",
+            "stderr": (
+                "ERROR: Could not find the 'genewalk' command.\n\n"
+                "Install it with:  pip install genewalk\n\n"
+                "If you already installed it, make sure it's in the same "
+                "Python environment running this app.\n"
+                f"Current Python: {sys.executable}"
+            ),
+            "output_dir": base / project,
+        }
 
     output_dir = base / project
 
