@@ -274,6 +274,83 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 }
 
 /* ------------------------------------------------------------------ */
+/* Guide / tutorial section                                            */
+/* ------------------------------------------------------------------ */
+.guide-header {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 1.5rem 0 0.75rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+.guide-section h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1a365d;
+    margin: 0.75rem 0 0.4rem 0;
+}
+.guide-section p, .guide-section li {
+    font-size: 0.88rem;
+    color: #475569;
+    line-height: 1.65;
+}
+.guide-section ul {
+    padding-left: 1.25rem;
+    margin: 0.3rem 0;
+}
+.guide-section code {
+    background: #f1f5f9;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    color: #1a365d;
+}
+.param-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 0.5rem 0;
+}
+.param-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    background: #f1f5f9;
+    color: #1a365d;
+    font-weight: 600;
+    border-bottom: 2px solid #e2e8f0;
+}
+.param-table td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+    color: #475569;
+    vertical-align: top;
+}
+.param-table tr:hover td {
+    background: #f8fafc;
+}
+.recommend-badge {
+    display: inline-block;
+    background: #dcfce7;
+    color: #166534;
+    border-radius: 4px;
+    padding: 0.1rem 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.gene-example-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #1e293b;
+    line-height: 1.7;
+    margin: 0.5rem 0;
+}
+
+/* ------------------------------------------------------------------ */
 /* Footer                                                              */
 /* ------------------------------------------------------------------ */
 .app-footer {

@@ -103,19 +103,31 @@ with st.sidebar:
         "Gene ID type",
         ["hgnc_symbol", "hgnc_id", "ensembl_id", "mgi_id", "rgd_id", "entrez"],
         index=0,
-        help="Identifier type used in your gene list.",
+        help="Must match your gene list. Use hgnc_symbol for human gene names "
+             "(e.g. BRAF, KRAS), ensembl_id for Ensembl IDs, mgi_id for mouse, "
+             "rgd_id for rat.",
     )
 
     col1, col2 = st.columns(2)
     nproc = col1.number_input("CPU cores", min_value=1, max_value=32, value=4,
-                              help="Parallel workers for GeneWalk.")
+                              help="Parallel workers. Use 2-4 for laptops, up to 8-16 "
+                                   "for workstations. Don't exceed your physical core count. "
+                                   "More cores = faster but higher memory usage.")
     nreps_graph = col2.number_input("Graph reps", min_value=1, max_value=20, value=3,
-                                    help="DeepWalk repetitions on the condition-specific network.")
+                                    help="DeepWalk repetitions on the gene-GO network. "
+                                         "Use 3 for quick testing, 10-15 for publication-quality "
+                                         "results. Higher = more stable but slower.")
     nreps_null = st.number_input("Null reps", min_value=1, max_value=20, value=3,
-                                 help="DeepWalk repetitions on randomized networks.")
+                                 help="DeepWalk repetitions on randomized networks for "
+                                      "statistical background. Should generally match Graph reps. "
+                                      "Use 3 for testing, 10-15 for final analyses.")
     alpha_fdr = st.slider("FDR threshold", 0.01, 1.0, 1.0, 0.01,
-                          help="FDR threshold for GeneWalk. Use 1.0 to keep all results.")
-    project_name = st.text_input("Project name", value="genewalk_analysis")
+                          help="False discovery rate cutoff. Set to 1.0 (default) to keep "
+                               "all results and filter interactively in the dashboard. "
+                               "Set to 0.05 or 0.1 to pre-filter during the GeneWalk run.")
+    project_name = st.text_input("Project name", value="genewalk_analysis",
+                                 help="Names the output directory. Use something descriptive "
+                                      "like 'mapk_screen' or 'patient_deg_analysis'.")
 
     st.markdown("---")
     run_clicked = st.button("Run GeneWalk", type="primary", disabled=len(genes) == 0,
@@ -234,6 +246,168 @@ if st.session_state.results_df is None:
         "in the sidebar to instantly explore the app with pre-computed MAPK/ERK pathway data.</div>",
         unsafe_allow_html=True,
     )
+
+    # ------------------------------------------------------------------
+    # Getting Started Guide
+    # ------------------------------------------------------------------
+    st.markdown('<p class="guide-header">Getting Started Guide</p>', unsafe_allow_html=True)
+
+    with st.expander("How to use this app", expanded=False):
+        st.markdown("""
+<div class="guide-section">
+<h4>Quick walkthrough</h4>
+<ol>
+<li><strong>Load your genes</strong> &mdash; In the sidebar on the left, choose an input
+method: upload a <code>.txt</code> file (one gene per line), paste gene names directly,
+or select <em>Use sample data</em> to try the built-in MAPK/ERK pathway demo.</li>
+<li><strong>Configure parameters</strong> &mdash; Pick the correct gene ID type, adjust
+CPU cores & repetition counts, and set the FDR threshold (see the
+<em>Understanding the parameters</em> section below for guidance).</li>
+<li><strong>Run GeneWalk</strong> &mdash; Click the blue <em>Run GeneWalk</em> button.
+The analysis runs locally on your machine and progress is shown in real time.
+For a quick test, lower the repetition counts.</li>
+<li><strong>Explore results</strong> &mdash; Once the run completes (or you upload a
+previous <code>genewalk_results.csv</code>), the dashboard appears with five
+interactive tabs:</li>
+</ol>
+<ul>
+<li><strong>Overview</strong> &mdash; Volcano plot, GO domain breakdown, per-gene summary
+bar chart, and p-value distribution.</li>
+<li><strong>Per-Gene Explorer</strong> &mdash; Select any gene and see its top GO term
+associations ranked by significance.</li>
+<li><strong>Network</strong> &mdash; Interactive gene&ndash;GO bipartite network. Select
+genes and adjust max edges to explore connections.</li>
+<li><strong>Heatmap</strong> &mdash; Gene &times; GO term similarity heatmap showing
+which genes share functional annotations.</li>
+<li><strong>Data Table</strong> &mdash; Full filterable table with CSV download.</li>
+</ul>
+<p>All visualizations respond to the <strong>Filters</strong> bar at the top of the
+dashboard (p-value column, significance threshold, and GO domain).</p>
+</div>
+        """, unsafe_allow_html=True)
+
+    with st.expander("Understanding the parameters", expanded=False):
+        st.markdown("""
+<div class="guide-section">
+<table class="param-table">
+<tr>
+    <th>Parameter</th><th>What it does</th><th>Recommendation</th>
+</tr>
+<tr>
+    <td><strong>Gene ID type</strong></td>
+    <td>Tells GeneWalk which identifier system your gene list uses. Must match
+    exactly or genes won't be recognized.</td>
+    <td><span class="recommend-badge">hgnc_symbol</span> for human genes
+    (e.g. <code>BRAF</code>, <code>KRAS</code>). Use <code>ensembl_id</code>
+    for Ensembl IDs, <code>mgi_id</code> for mouse, <code>rgd_id</code> for rat.</td>
+</tr>
+<tr>
+    <td><strong>CPU cores</strong></td>
+    <td>Number of parallel workers for the DeepWalk random-walk step. More cores
+    = faster analysis, but uses more CPU and memory.</td>
+    <td><span class="recommend-badge">2&ndash;4</span> for laptops/small machines.
+    Up to <strong>8&ndash;16</strong> if you have a workstation. Don't exceed
+    your physical core count (check with <code>nproc</code> on Linux /
+    <em>Activity Monitor</em> on Mac).</td>
+</tr>
+<tr>
+    <td><strong>Graph reps</strong></td>
+    <td>Number of DeepWalk repetitions on the condition-specific gene&ndash;GO
+    network. More reps = more stable embeddings but longer runtime.</td>
+    <td><span class="recommend-badge">3</span> for a quick exploratory run.
+    <strong>10&ndash;15</strong> for publication-quality results.</td>
+</tr>
+<tr>
+    <td><strong>Null reps</strong></td>
+    <td>DeepWalk repetitions on randomized (null) networks, used to build the
+    statistical background. More reps = tighter p-values.</td>
+    <td><span class="recommend-badge">3</span> for quick testing.
+    <strong>10&ndash;15</strong> for final analyses. Should generally match
+    Graph reps.</td>
+</tr>
+<tr>
+    <td><strong>FDR threshold</strong></td>
+    <td>False discovery rate cutoff applied during the GeneWalk run. Gene&ndash;GO
+    associations above this threshold may be discarded internally.</td>
+    <td><span class="recommend-badge">1.0</span> (keep everything) so you can
+    filter interactively in the dashboard. Set to <strong>0.05</strong> or
+    <strong>0.1</strong> if you want GeneWalk to pre-filter for you.</td>
+</tr>
+<tr>
+    <td><strong>Project name</strong></td>
+    <td>Names the output directory. Useful when running multiple analyses to keep
+    results organized.</td>
+    <td>Something descriptive, e.g. <code>mapk_erk_screen</code> or
+    <code>patient_cohort_deg</code>.</td>
+</tr>
+</table>
+
+<h4>Performance &amp; resource allocation</h4>
+<ul>
+<li><strong>RAM:</strong> GeneWalk typically uses <strong>2&ndash;4 GB</strong> for a list
+of ~20 genes. For 100+ genes, expect <strong>4&ndash;8 GB</strong>. Make sure your
+machine has enough free memory before starting a run.</li>
+<li><strong>Runtime:</strong> A 20-gene list with 3 graph/null reps on 4 cores takes
+roughly <strong>5&ndash;15 minutes</strong>. With 10 reps each it can take
+<strong>30&ndash;60+ minutes</strong>. Very large gene lists (200+) may need hours.</li>
+<li><strong>Disk:</strong> Each run produces ~5&ndash;50 MB of output files depending on
+gene count and reps.</li>
+<li><strong>Tip:</strong> Start with a small gene list and low reps (3/3) to verify
+everything works, then increase for your real analysis.</li>
+</ul>
+</div>
+        """, unsafe_allow_html=True)
+
+    with st.expander("Example gene list & input format", expanded=False):
+        st.markdown("""
+<div class="guide-section">
+<h4>Input format</h4>
+<p>Your gene list should be a plain text file with <strong>one gene identifier per
+line</strong>, no headers, no commas. Like this:</p>
+<div class="gene-example-box">
+BRAF<br>
+MAP2K1<br>
+MAP2K2<br>
+MAPK1<br>
+MAPK3<br>
+KRAS<br>
+NRAS<br>
+RAF1<br>
+MYC<br>
+FOS
+</div>
+<p>This example contains 10 genes from the <strong>MAPK/ERK signaling pathway</strong>.
+The built-in sample data uses 20 genes from this pathway.</p>
+
+<h4>Where should gene lists come from?</h4>
+<ul>
+<li><strong>Differential expression analysis</strong> &mdash; Genes that are significantly
+up- or down-regulated in your RNA-seq / microarray experiment (e.g. DESeq2, edgeR,
+limma output). Typically you'd take the top differentially expressed genes
+(e.g. adjusted p &lt; 0.05).</li>
+<li><strong>Genetic screens</strong> &mdash; Hit genes from CRISPR screens, siRNA screens,
+or mutagenesis studies.</li>
+<li><strong>GWAS / variant studies</strong> &mdash; Genes harboring significant variants
+from genome-wide association studies.</li>
+<li><strong>Curated pathways</strong> &mdash; Genes from a known pathway of interest
+(KEGG, Reactome, WikiPathways) when you want to explore their GO annotations
+in your specific biological context.</li>
+<li><strong>Co-expression modules</strong> &mdash; Gene clusters from WGCNA or similar
+co-expression network analyses.</li>
+</ul>
+
+<h4>Tips for good input</h4>
+<ul>
+<li><strong>10&ndash;200 genes</strong> is the sweet spot. Fewer than 5 may not produce
+meaningful network context. More than 500 will be very slow.</li>
+<li>Make sure identifiers match the <strong>Gene ID type</strong> you select (e.g.
+<code>BRAF</code> for HGNC symbols, <code>ENSG00000157764</code> for Ensembl).</li>
+<li>Remove duplicates and blank lines beforehand.</li>
+<li>Gene names are <strong>case-sensitive</strong> &mdash; use official symbols
+(e.g. <code>BRAF</code>, not <code>braf</code> or <code>B-Raf</code>).</li>
+</ul>
+</div>
+        """, unsafe_allow_html=True)
 
     if st.session_state.run_log:
         with st.expander("Run log"):
