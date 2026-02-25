@@ -1,6 +1,5 @@
 """Backend module for running GeneWalk and parsing results."""
 
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,18 +11,20 @@ import pandas as pd
 DEFAULT_BASE_DIR = Path(tempfile.gettempdir()) / "genewalk_runs"
 
 
-def _genewalk_base_cmd() -> list[str]:
-    """Resolve the GeneWalk command.
+_WRAPPER = str(Path(__file__).with_name("_gw_wrapper.py"))
 
-    On Windows, pip sometimes installs entry-point scripts in a ``Scripts/``
-    directory that isn't on PATH (common with Microsoft Store Python).  When
-    the bare ``genewalk`` command isn't found we fall back to invoking the
-    module through the current Python interpreter.
+
+def _genewalk_base_cmd() -> list[str]:
+    """Return the base command list for invoking GeneWalk.
+
+    Always runs through our wrapper script so that a proper HTTP User-Agent
+    header is set before GeneWalk tries to download any resources (the default
+    ``urllib`` User-Agent is blocked by several servers with HTTP 403).
+
+    Using ``sys.executable`` also avoids the Windows PATH issue where pip's
+    ``Scripts/`` directory isn't on PATH (common with Microsoft Store Python).
     """
-    if shutil.which("genewalk"):
-        return ["genewalk"]
-    # Fall back: run via the same Python that is running this app.
-    return [sys.executable, "-m", "genewalk.cli"]
+    return [sys.executable, _WRAPPER]
 
 
 def is_genewalk_available() -> bool:
