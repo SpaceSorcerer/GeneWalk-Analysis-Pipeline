@@ -1,0 +1,75 @@
+name: Build Desktop Executables
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: GeneWalk-Windows.exe
+            pyinstaller_name: GeneWalk.exe
+          - os: macos-latest
+            artifact: GeneWalk-macOS
+            pyinstaller_name: GeneWalk
+          - os: ubuntu-latest
+            artifact: GeneWalk-Linux
+            pyinstaller_name: GeneWalk
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.os }})
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-desktop.txt
+          pip install pyinstaller
+
+      - name: Build executable
+        run: python build_desktop.py
+
+      - name: Rename artifact
+        shell: bash
+        run: mv "dist/${{ matrix.pyinstaller_name }}" "dist/${{ matrix.artifact }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    name: Create Release
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -lhR artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/GeneWalk-Windows.exe
+            artifacts/GeneWalk-macOS
+            artifacts/GeneWalk-Linux
