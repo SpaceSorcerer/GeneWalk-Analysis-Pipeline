@@ -60,6 +60,12 @@ def main():
 
     print(f"Starting GeneWalk on http://localhost:{port}")
 
+    # Force headless mode via environment variable — this is the most
+    # reliable way to prevent Streamlit from opening its own browser tab.
+    # The CLI flag alone (--server.headless) can be ignored in frozen bundles.
+    os.environ["STREAMLIT_SERVER_HEADLESS"] = "true"
+    os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
+
     sys.argv = [
         "streamlit", "run", app_path,
         f"--server.port={port}",
@@ -68,8 +74,8 @@ def main():
         "--global.developmentMode=false",
     ]
 
-    # Open browser in a background thread (fallback in case Streamlit's
-    # own browser-open doesn't work in the frozen environment)
+    # Open browser once from our own thread — this is the ONLY browser
+    # open; Streamlit's own open is suppressed by headless mode above.
     threading.Thread(target=_open_browser, args=(port,), daemon=True).start()
 
     from streamlit.web.cli import main as st_main
