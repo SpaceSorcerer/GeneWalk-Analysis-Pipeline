@@ -5,14 +5,12 @@ Prerequisites:
     pip install pyinstaller
 
 Usage:
-    python build_desktop.py          # Build for your current platform
-    python build_desktop.py --onedir # Build as a directory (faster, easier to debug)
+    python build_desktop.py   # Build as a directory bundle (recommended)
 
-The executable will be created in the ``dist/`` directory.
+The executable will be created in the ``dist/GeneWalk/`` directory.
 """
 
 import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -30,70 +28,71 @@ STREAMLIT_CONFIG = ROOT / ".streamlit"
 APP_NAME = "GeneWalk"
 
 
-def find_streamlit_dir() -> Path:
-    """Locate the installed Streamlit package directory."""
-    import streamlit
-    return Path(streamlit.__file__).parent
+def find_package_dir(package_name: str) -> Path:
+    """Locate an installed Python package's directory."""
+    mod = __import__(package_name)
+    return Path(mod.__file__).parent
 
 
-def build(onedir: bool = False):
+def build():
     """Run PyInstaller to build the desktop executable."""
-    streamlit_dir = find_streamlit_dir()
+    streamlit_dir = find_package_dir("streamlit")
+    plotly_dir = find_package_dir("plotly")
 
-    # Streamlit needs its static assets at runtime
+    # Streamlit needs its static frontend assets and runtime files
     streamlit_static = streamlit_dir / "static"
 
+    # Use --onedir: Streamlit does not work reliably with --onefile because
+    # it needs to locate its static assets and config files at runtime.
     cmd = [
         sys.executable, "-m", "PyInstaller",
         str(LAUNCHER),
         "--name", APP_NAME,
+        "--onedir",
         "--clean",
         "--noconfirm",
 
         # ---- Data files ----
-        # The desktop Streamlit app
         "--add-data", f"{DESKTOP_APP}{os.pathsep}.",
-        # The genewalk_app package
         "--add-data", f"{GENEWALK_APP_PKG}{os.pathsep}genewalk_app",
-        # Sample data
         "--add-data", f"{SAMPLE_DATA}{os.pathsep}sample_data",
-        # Streamlit config
         "--add-data", f"{STREAMLIT_CONFIG}{os.pathsep}.streamlit",
-        # Streamlit's static assets (HTML, JS, CSS for the web UI)
         "--add-data", f"{streamlit_static}{os.pathsep}streamlit/static",
 
+        # ---- Collect entire packages ----
+        # Streamlit, Plotly, and their templates/assets must be fully
+        # collected or the app will crash with missing-module errors.
+        "--collect-all", "streamlit",
+        "--collect-all", "plotly",
+        "--collect-all", "altair",
+        "--collect-all", "pydeck",
+        "--collect-all", "genewalk",
+
         # ---- Hidden imports ----
-        # Streamlit and its dependencies that PyInstaller misses
         "--hidden-import", "streamlit",
         "--hidden-import", "streamlit.runtime.scriptrunner",
+        "--hidden-import", "streamlit.runtime.scriptrunner.script_runner",
         "--hidden-import", "streamlit.web.cli",
+        "--hidden-import", "streamlit.web.server",
         "--hidden-import", "plotly",
         "--hidden-import", "plotly.express",
         "--hidden-import", "plotly.graph_objects",
         "--hidden-import", "pandas",
+        "--hidden-import", "pandas._libs.tslibs.timedeltas",
         "--hidden-import", "networkx",
         "--hidden-import", "numpy",
+        "--hidden-import", "PIL",
+        "--hidden-import", "pkg_resources",
+        "--hidden-import", "pyarrow",
         "--hidden-import", "genewalk",
         "--hidden-import", "genewalk.cli",
         "--hidden-import", "genewalk.gene_lists",
         "--hidden-import", "genewalk.resources",
-        "--hidden-import", "PIL",
-        "--hidden-import", "pkg_resources",
-
-        # ---- Collect submodules ----
-        "--collect-submodules", "streamlit",
-        "--collect-submodules", "plotly",
-        "--collect-submodules", "genewalk",
     ]
 
-    if onedir:
-        cmd.append("--onedir")
-    else:
-        cmd.append("--onefile")
-
     print(f"Building {APP_NAME}...")
-    print(f"  Mode: {'onedir' if onedir else 'onefile'}")
     print(f"  Streamlit: {streamlit_dir}")
+    print(f"  Plotly:    {plotly_dir}")
     print()
 
     result = subprocess.run(cmd, cwd=str(ROOT))
@@ -101,22 +100,18 @@ def build(onedir: bool = False):
         print(f"\nBuild failed with return code {result.returncode}")
         sys.exit(result.returncode)
 
-    dist_dir = ROOT / "dist"
-    if onedir:
-        exe_path = dist_dir / APP_NAME
-        print(f"\nBuild complete!  Directory: {exe_path}")
-    else:
-        # Name varies by platform
-        exe_name = f"{APP_NAME}.exe" if sys.platform == "win32" else APP_NAME
-        exe_path = dist_dir / exe_name
-        print(f"\nBuild complete!  Executable: {exe_path}")
+    dist_dir = ROOT / "dist" / APP_NAME
+    exe_name = f"{APP_NAME}.exe" if sys.platform == "win32" else APP_NAME
+    exe_path = dist_dir / exe_name
 
+    print(f"\nBuild complete!")
+    print(f"  Directory: {dist_dir}")
+    print(f"  Executable: {exe_path}")
     print(
-        "\nTo run the app, double-click the executable or run it from the "
-        "command line."
+        "\nTo run: double-click the executable, or from a terminal:\n"
+        f"  {exe_path}"
     )
 
 
 if __name__ == "__main__":
-    onedir = "--onedir" in sys.argv
-    build(onedir=onedir)
+    build()

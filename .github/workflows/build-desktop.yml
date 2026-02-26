@@ -14,14 +14,14 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact: GeneWalk-Windows.exe
-            pyinstaller_name: GeneWalk.exe
+            artifact: GeneWalk-Windows
+            zip_name: GeneWalk-Windows.zip
           - os: macos-latest
             artifact: GeneWalk-macOS
-            pyinstaller_name: GeneWalk
+            zip_name: GeneWalk-macOS.zip
           - os: ubuntu-latest
             artifact: GeneWalk-Linux
-            pyinstaller_name: GeneWalk
+            zip_name: GeneWalk-Linux.zip
 
     runs-on: ${{ matrix.os }}
     name: Build (${{ matrix.os }})
@@ -41,15 +41,21 @@ jobs:
       - name: Build executable
         run: python build_desktop.py
 
-      - name: Rename artifact
+      - name: Zip output directory
         shell: bash
-        run: mv "dist/${{ matrix.pyinstaller_name }}" "dist/${{ matrix.artifact }}"
+        run: |
+          cd dist
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            7z a "../${{ matrix.zip_name }}" GeneWalk/
+          else
+            zip -r "../${{ matrix.zip_name }}" GeneWalk/
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: dist/${{ matrix.artifact }}
+          path: ${{ matrix.zip_name }}
 
   release:
     needs: build
@@ -70,6 +76,6 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            artifacts/GeneWalk-Windows.exe
-            artifacts/GeneWalk-macOS
-            artifacts/GeneWalk-Linux
+            artifacts/GeneWalk-Windows.zip
+            artifacts/GeneWalk-macOS.zip
+            artifacts/GeneWalk-Linux.zip
