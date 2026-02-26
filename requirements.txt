@@ -1,5 +1,7 @@
-genewalk>=1.6
+# Web visualizer dependencies (used by Streamlit Cloud)
+# GeneWalk is NOT needed -- the web app only visualizes pre-computed results.
 streamlit>=1.30
 plotly>=5.18
 pandas>=2.0
 networkx>=3.0
+numpy

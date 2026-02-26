@@ -25,5 +25,9 @@ Thumbs.db
 genewalk_runs/
 *.pkl
 
+# PyInstaller
+dist/
+*.spec
+
 # Streamlit
 .streamlit/secrets.toml

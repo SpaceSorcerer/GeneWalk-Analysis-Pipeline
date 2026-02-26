@@ -1,0 +1,10 @@
+# Desktop app dependencies (includes GeneWalk for running analyses)
+streamlit>=1.30
+plotly>=5.18
+pandas>=2.0
+networkx>=3.0
+numpy
+genewalk>=1.6
+
+# For building the executable (only needed by developers)
+# pip install pyinstaller
