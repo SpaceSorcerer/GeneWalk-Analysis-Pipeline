@@ -8,10 +8,26 @@ For development (no PyInstaller), just run:  streamlit run desktop.py
 """
 
 import os
+import socket
 import sys
 import threading
 import time
 import webbrowser
+
+
+def _find_free_port(start: int = 8501, end: int = 8600) -> int:
+    """Find the first available port in the given range."""
+    for port in range(start, end):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("localhost", port))
+                return port
+            except OSError:
+                continue
+    # Fallback: let the OS pick any free port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("localhost", 0))
+        return s.getsockname()[1]
 
 
 def _open_browser(port: int, delay: float = 3.0):
@@ -21,7 +37,7 @@ def _open_browser(port: int, delay: float = 3.0):
 
 
 def main():
-    port = 8501
+    port = _find_free_port()
 
     # When running as a frozen PyInstaller bundle, sys._MEIPASS points to
     # the temporary directory where PyInstaller extracted the bundled files.
@@ -41,6 +57,8 @@ def main():
     else:
         app_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 "desktop.py")
+
+    print(f"Starting GeneWalk on http://localhost:{port}")
 
     sys.argv = [
         "streamlit", "run", app_path,
