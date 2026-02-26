@@ -88,6 +88,10 @@ def build():
         "--hidden-import", "genewalk.cli",
         "--hidden-import", "genewalk.gene_lists",
         "--hidden-import", "genewalk.resources",
+        # _gw_wrapper is never imported at the top level, but the
+        # --run-genewalk dispatcher in desktop_launcher.py imports from it
+        # when the exe is re-invoked as a GeneWalk subprocess.
+        "--hidden-import", "genewalk_app._gw_wrapper",
     ]
 
     print(f"Building {APP_NAME}...")

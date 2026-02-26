@@ -76,5 +76,32 @@ def main():
     st_main()
 
 
+def _run_genewalk_subprocess():
+    """Dispatch to the GeneWalk CLI when the exe is re-invoked as a subprocess.
+
+    When ``runner.py`` spawns a GeneWalk analysis, it calls
+    ``[sys.executable, "--run-genewalk", ...]``.  In the frozen bundle
+    ``sys.executable`` is this very ``.exe``, so we detect the flag here
+    and run GeneWalk directly instead of starting another Streamlit server.
+    """
+    os.environ["PYTHONUTF8"] = "1"
+
+    # Build a clean argv for GeneWalk's argparse (strip our sentinel flag)
+    sys.argv = ["genewalk"] + [a for a in sys.argv[1:] if a != "--run-genewalk"]
+
+    # Apply the same patches that _gw_wrapper.py applies:
+    # 1. Proper HTTP User-Agent so resource downloads aren't blocked
+    # 2. GeneMapper patch for MGI_EntrezGene.rpt format changes
+    from genewalk_app._gw_wrapper import _install_opener, _patch_gene_mapper
+    _install_opener()
+    _patch_gene_mapper()
+
+    from genewalk.cli import main as gw_main
+    gw_main()
+
+
 if __name__ == "__main__":
-    main()
+    if "--run-genewalk" in sys.argv:
+        _run_genewalk_subprocess()
+    else:
+        main()

@@ -37,7 +37,14 @@ def _genewalk_base_cmd() -> list[str]:
 
     Using ``sys.executable`` also avoids the Windows PATH issue where pip's
     ``Scripts/`` directory isn't on PATH (common with Microsoft Store Python).
+
+    In a PyInstaller frozen bundle, ``sys.executable`` points to the ``.exe``
+    rather than a Python interpreter, so we pass a ``--run-genewalk`` flag that
+    tells the launcher to dispatch directly to the GeneWalk CLI instead of
+    starting another Streamlit server.
     """
+    if getattr(sys, "frozen", False):
+        return [sys.executable, "--run-genewalk"]
     return [sys.executable, _WRAPPER]
 
 
