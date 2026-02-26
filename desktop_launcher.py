@@ -63,7 +63,7 @@ def main():
     sys.argv = [
         "streamlit", "run", app_path,
         f"--server.port={port}",
-        "--server.headless=false",
+        "--server.headless=true",
         "--browser.gatherUsageStats=false",
         "--global.developmentMode=false",
     ]
