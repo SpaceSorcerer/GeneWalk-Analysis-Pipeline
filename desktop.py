@@ -110,11 +110,12 @@ with st.sidebar:
 
     id_type = st.selectbox(
         "Gene ID type",
-        ["hgnc_symbol", "hgnc_id", "ensembl_id", "mgi_id", "rgd_id", "entrez"],
+        ["hgnc_symbol", "hgnc_id", "ensembl_id", "mgi_id", "rgd_id",
+         "entrez_human", "entrez_mouse"],
         index=0,
         help="Must match your gene list. Use hgnc_symbol for human gene names "
              "(e.g. BRAF, KRAS), ensembl_id for Ensembl IDs, mgi_id for mouse, "
-             "rgd_id for rat.",
+             "rgd_id for rat, entrez_human/entrez_mouse for Entrez Gene IDs.",
     )
 
     col1, col2 = st.columns(2)
