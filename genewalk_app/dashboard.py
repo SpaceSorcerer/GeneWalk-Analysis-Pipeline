@@ -110,13 +110,13 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             st.plotly_chart(
                 volcano_plot(df, padj_col=effective_padj_col,
                              padj_threshold=padj_threshold),
-                use_container_width=True,
+                use_container_width=True, theme=None,
             )
         with col_right:
             st.plotly_chart(
                 go_domain_pie(df, padj_col=effective_padj_col,
                               padj_threshold=padj_threshold),
-                use_container_width=True,
+                use_container_width=True, theme=None,
             )
 
         if padj_col != "(none)":
@@ -126,11 +126,11 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             )
             if not gene_summary.empty:
                 st.plotly_chart(summary_bar(gene_summary),
-                               use_container_width=True)
+                               use_container_width=True, theme=None)
 
         st.plotly_chart(
             pvalue_distribution(df, padj_col=effective_padj_col),
-            use_container_width=True,
+            use_container_width=True, theme=None,
         )
 
     # ---- Tab: Per-Gene Explorer -------------------------------------------
@@ -143,7 +143,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             st.plotly_chart(
                 gene_bar_chart(df, selected_gene,
                                padj_col=effective_padj_col, top_n=top_n),
-                use_container_width=True,
+                use_container_width=True, theme=None,
             )
 
             with st.expander(f"Raw data for {selected_gene}", expanded=False):
@@ -182,7 +182,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
                     padj_threshold=padj_threshold,
                     max_edges=max_edges,
                 ),
-                use_container_width=True,
+                use_container_width=True, theme=None,
             )
             st.caption(
                 "Red = genes | Blue = biological process | "
@@ -212,7 +212,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
                     padj_threshold=padj_threshold,
                     max_terms=max_terms,
                 ),
-                use_container_width=True,
+                use_container_width=True, theme=None,
             )
         else:
             st.info("No gene symbols found in results.")
