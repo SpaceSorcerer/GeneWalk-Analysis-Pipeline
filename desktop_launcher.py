@@ -10,9 +10,16 @@ For development (no PyInstaller), just run:  streamlit run desktop.py
 import os
 import socket
 import sys
+import tempfile
 import threading
 import time
 import webbrowser
+from pathlib import Path
+
+# Flag file used to detect whether a browser client has already connected
+# (e.g. from restored browser tabs).  desktop.py writes this file when it
+# starts rendering for a client.
+_CLIENT_FLAG = Path(tempfile.gettempdir()) / ".genewalk_client_connected"
 
 
 def _find_free_port(start: int = 8501, end: int = 8600) -> int:
@@ -54,14 +61,46 @@ webbrowser.open_new = lambda url: _open_browser_once(url, new=1)
 webbrowser.open_new_tab = lambda url: _open_browser_once(url, new=2)
 
 
-def _open_browser(port: int, delay: float = 3.0):
-    """Open the default browser after a short delay to let the server start."""
-    time.sleep(delay)
+def _open_browser(port: int):
+    """Open the browser only if no client has already connected.
+
+    Waits for the Streamlit server to become healthy, then gives restored
+    browser tabs a couple of seconds to reconnect.  If desktop.py has
+    already written the client-connected flag (meaning a restored tab
+    reconnected), we skip opening a new tab entirely.
+    """
+    import urllib.request
+
+    # Wait for server to be healthy (up to 30 seconds)
+    url = f"http://localhost:{port}/_stcore/health"
+    for _ in range(60):
+        try:
+            urllib.request.urlopen(url, timeout=1)
+            break
+        except Exception:
+            time.sleep(0.5)
+
+    # Give restored browser tabs a moment to reconnect and trigger
+    # desktop.py, which writes the client-connected flag file.
+    time.sleep(2.0)
+
+    if _CLIENT_FLAG.exists():
+        # A client already connected (restored browser tab) — skip.
+        return
+
     webbrowser.open(f"http://localhost:{port}")
 
 
 def main():
+    # Required for PyInstaller on Windows when any code uses multiprocessing.
+    import multiprocessing
+    multiprocessing.freeze_support()
+
     port = _find_free_port()
+
+    # Delete the client-connected flag from any previous run so we get a
+    # clean signal for this session.
+    _CLIENT_FLAG.unlink(missing_ok=True)
 
     # When running as a frozen PyInstaller bundle, sys._MEIPASS points to
     # the temporary directory where PyInstaller extracted the bundled files.
@@ -98,8 +137,8 @@ def main():
         "--global.developmentMode=false",
     ]
 
-    # Open browser once from our own thread — this is the ONLY browser
-    # open; Streamlit's own open is suppressed by headless mode above.
+    # Open browser in a background thread — but only if no restored tab
+    # has already connected (see _open_browser logic above).
     threading.Thread(target=_open_browser, args=(port,), daemon=True).start()
 
     # Belt-and-suspenders: also patch Streamlit's own open_browser function
