@@ -30,6 +30,30 @@ def _find_free_port(start: int = 8501, end: int = 8600) -> int:
         return s.getsockname()[1]
 
 
+# ---------------------------------------------------------------------------
+# Ensure only ONE browser tab ever opens.  In frozen (PyInstaller) bundles
+# the Streamlit headless flag can be silently ignored, causing Streamlit to
+# call webbrowser.open *in addition to* our own _open_browser thread.
+# Monkey-patching webbrowser.open so it can only fire once eliminates the
+# duplicate-tab problem regardless of what Streamlit does internally.
+# ---------------------------------------------------------------------------
+_browser_opened = False
+_original_wb_open = webbrowser.open
+
+
+def _open_browser_once(url, new=0, autoraise=True):
+    global _browser_opened
+    if _browser_opened:
+        return
+    _browser_opened = True
+    _original_wb_open(url, new=new, autoraise=autoraise)
+
+
+webbrowser.open = _open_browser_once
+webbrowser.open_new = lambda url: _open_browser_once(url, new=1)
+webbrowser.open_new_tab = lambda url: _open_browser_once(url, new=2)
+
+
 def _open_browser(port: int, delay: float = 3.0):
     """Open the default browser after a short delay to let the server start."""
     time.sleep(delay)
