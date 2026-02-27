@@ -67,6 +67,7 @@ def build():
         "--collect-all", "altair",
         "--collect-all", "pydeck",
         "--collect-all", "genewalk",
+        "--collect-all", "matplotlib",
 
         # ---- Hidden imports ----
         "--hidden-import", "streamlit",
@@ -91,6 +92,10 @@ def build():
         # _gw_wrapper is never imported at the top level, but the
         # --run-genewalk dispatcher in desktop_launcher.py imports from it
         # when the exe is re-invoked as a GeneWalk subprocess.
+        "--hidden-import", "matplotlib",
+        "--hidden-import", "matplotlib.backends.backend_pdf",
+        "--hidden-import", "matplotlib.backends.backend_agg",
+        "--hidden-import", "matplotlib.backends.backend_svg",
         "--hidden-import", "genewalk_app._gw_wrapper",
     ]
 
