@@ -12,6 +12,10 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+# Signal to the launcher that a browser client has connected so it can
+# skip opening a duplicate tab (handles browser session restore).
+Path(tempfile.gettempdir(), ".genewalk_client_connected").write_text("")
+
 from genewalk_app.dashboard import render_dashboard
 from genewalk_app.runner import (
     find_results_csv,
