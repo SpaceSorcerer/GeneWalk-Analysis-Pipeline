@@ -161,6 +161,27 @@ def _run_genewalk_subprocess():
     """
     os.environ["PYTHONUTF8"] = "1"
 
+    # PYTHONUTF8 only takes effect when set *before* the Python interpreter
+    # starts.  In a frozen PyInstaller bundle the interpreter is already
+    # running, so the env var alone is not enough.  Monkey-patch builtins.open
+    # so that text-mode file operations default to UTF-8 instead of the
+    # system locale (cp1252 on Windows), which crashes GeneWalk's HTML report
+    # generation on characters outside the cp1252 range.
+    import builtins
+    _builtin_open = builtins.open
+
+    def _utf8_open(*args, **kwargs):
+        # Leave binary-mode opens untouched.
+        mode = args[1] if len(args) > 1 else kwargs.get("mode", "r")
+        if "b" in mode:
+            return _builtin_open(*args, **kwargs)
+        # Default encoding to UTF-8 for text-mode opens when not specified.
+        if "encoding" not in kwargs and len(args) <= 3:
+            kwargs["encoding"] = "utf-8"
+        return _builtin_open(*args, **kwargs)
+
+    builtins.open = _utf8_open
+
     # Build a clean argv for GeneWalk's argparse (strip our sentinel flag)
     sys.argv = ["genewalk"] + [a for a in sys.argv[1:] if a != "--run-genewalk"]
 

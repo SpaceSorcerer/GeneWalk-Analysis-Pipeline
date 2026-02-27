@@ -6,6 +6,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 import networkx as nx
 
+# Unified GO domain color palette used across all charts.
+GO_DOMAIN_COLORS = {
+    "biological_process": "#4A90D9",
+    "molecular_function": "#F0AD4E",
+    "cellular_component": "#5CB85C",
+}
+
 
 def volcano_plot(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold: float = 0.05) -> go.Figure:
     """Volcano-style plot: similarity score vs -log10(adjusted p-value)."""
@@ -14,19 +21,21 @@ def volcano_plot(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold: 
 
     plot_df = df.dropna(subset=[padj_col, "sim"]).copy()
     plot_df["neg_log10_padj"] = -np.log10(plot_df[padj_col].clip(lower=1e-300))
-    plot_df["significant"] = plot_df[padj_col] <= padj_threshold
+    plot_df["significant"] = plot_df[padj_col].le(padj_threshold).map(
+        {True: "Significant", False: "Not significant"}
+    )
 
     fig = px.scatter(
         plot_df,
         x="sim",
         y="neg_log10_padj",
         color="significant",
-        color_discrete_map={True: "#D9534F", False: "#B0BEC5"},
+        color_discrete_map={"Significant": "#D9534F", "Not significant": "#B0BEC5"},
         hover_data=["hgnc_symbol", "go_name", padj_col, "sim"],
         labels={
             "sim": "Similarity Score",
             "neg_log10_padj": "-log10(Adjusted P-value)",
-            "significant": f"Significant (padj <= {padj_threshold})",
+            "significant": "",
         },
     )
 
@@ -72,11 +81,7 @@ def gene_bar_chart(
         color=color_col,
         orientation="h",
         hover_data=[c for c in ["go_id", padj_col, "sim"] if c in gene_df.columns],
-        color_discrete_map={
-            "biological_process": "#4A90D9",
-            "molecular_function": "#D9534F",
-            "cellular_component": "#5CB85C",
-        },
+        color_discrete_map=GO_DOMAIN_COLORS,
         labels={
             "neg_log10_padj": "-log10(Adjusted P-value)",
             "go_name": "GO Term",
@@ -107,11 +112,7 @@ def go_domain_pie(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold:
         values="count",
         names="go_domain",
         color="go_domain",
-        color_discrete_map={
-            "biological_process": "#4A90D9",
-            "molecular_function": "#D9534F",
-            "cellular_component": "#5CB85C",
-        },
+        color_discrete_map=GO_DOMAIN_COLORS,
     )
     fig.update_layout(
         title="GO Domain Distribution (Significant Terms)",
@@ -282,12 +283,7 @@ def gene_go_network(
     )
 
     # GO term nodes -- color by domain
-    domain_color = {
-        "biological_process": "#4A90D9",
-        "molecular_function": "#F0AD4E",
-        "cellular_component": "#5CB85C",
-        "unknown": "#999",
-    }
+    domain_color = {**GO_DOMAIN_COLORS, "unknown": "#999"}
     go_nodes = [n for n, d in G.nodes(data=True) if d.get("node_type") == "go"]
     go_x = [pos[n][0] for n in go_nodes]
     go_y = [pos[n][1] for n in go_nodes]
