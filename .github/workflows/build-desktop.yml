@@ -15,13 +15,10 @@ jobs:
         include:
           - os: windows-latest
             artifact: GeneWalk-Windows
-            zip_name: GeneWalk-Windows.zip
           - os: macos-latest
             artifact: GeneWalk-macOS
-            zip_name: GeneWalk-macOS.zip
           - os: ubuntu-latest
             artifact: GeneWalk-Linux
-            zip_name: GeneWalk-Linux.zip
 
     runs-on: ${{ matrix.os }}
     name: Build (${{ matrix.os }})
@@ -41,21 +38,11 @@ jobs:
       - name: Build executable
         run: python build_desktop.py
 
-      - name: Zip output directory
-        shell: bash
-        run: |
-          cd dist
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            7z a "../${{ matrix.zip_name }}" GeneWalk/
-          else
-            zip -r "../${{ matrix.zip_name }}" GeneWalk/
-          fi
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: ${{ matrix.zip_name }}
+          path: dist/GeneWalk/
 
   release:
     needs: build
@@ -68,8 +55,17 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: List artifacts
-        run: ls -lhR artifacts/
+      - name: Zip artifacts for release
+        run: |
+          cd artifacts
+          for dir in GeneWalk-Windows GeneWalk-macOS GeneWalk-Linux; do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              zip -r "../${dir}.zip" .
+              cd ..
+            fi
+          done
+          ls -lh *.zip
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
