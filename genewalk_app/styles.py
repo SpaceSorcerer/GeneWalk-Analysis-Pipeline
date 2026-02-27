@@ -6,6 +6,61 @@ def get_custom_css() -> str:
     return """
 <style>
 /* ------------------------------------------------------------------ */
+/* Theme-aware CSS custom properties                                   */
+/* ------------------------------------------------------------------ */
+:root {
+    --gw-card-bg: #ffffff;
+    --gw-card-border: #e2e8f0;
+    --gw-card-hover-shadow: rgba(0,0,0,0.08);
+    --gw-card-shadow: rgba(0,0,0,0.04);
+    --gw-text-primary: #1e293b;
+    --gw-text-secondary: #64748b;
+    --gw-text-muted: #94a3b8;
+    --gw-text-heading: #1a365d;
+    --gw-text-subheading: #475569;
+    --gw-bg-secondary: #f8fafc;
+    --gw-bg-tertiary: #f1f5f9;
+    --gw-border-color: #e2e8f0;
+    --gw-info-bg: #eff6ff;
+    --gw-info-text: #1e40af;
+    --gw-badge-bg: #dcfce7;
+    --gw-badge-text: #166534;
+    --gw-code-bg: #f1f5f9;
+    --gw-code-text: #1a365d;
+    --gw-tab-active-bg: #ffffff;
+    --gw-tab-active-text: #1a365d;
+    --gw-footer-text: #94a3b8;
+    --gw-link-color: #4A90D9;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --gw-card-bg: #1e293b;
+        --gw-card-border: #334155;
+        --gw-card-hover-shadow: rgba(0,0,0,0.3);
+        --gw-card-shadow: rgba(0,0,0,0.2);
+        --gw-text-primary: #e2e8f0;
+        --gw-text-secondary: #94a3b8;
+        --gw-text-muted: #64748b;
+        --gw-text-heading: #93c5fd;
+        --gw-text-subheading: #cbd5e1;
+        --gw-bg-secondary: #0f172a;
+        --gw-bg-tertiary: #1e293b;
+        --gw-border-color: #334155;
+        --gw-info-bg: #172554;
+        --gw-info-text: #93c5fd;
+        --gw-badge-bg: #14532d;
+        --gw-badge-text: #86efac;
+        --gw-code-bg: #1e293b;
+        --gw-code-text: #93c5fd;
+        --gw-tab-active-bg: #1e293b;
+        --gw-tab-active-text: #93c5fd;
+        --gw-footer-text: #64748b;
+        --gw-link-color: #60a5fa;
+    }
+}
+
+/* ------------------------------------------------------------------ */
 /* Global overrides                                                    */
 /* ------------------------------------------------------------------ */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -81,36 +136,36 @@ html { scroll-behavior: smooth; }
 /* Metric cards                                                        */
 /* ------------------------------------------------------------------ */
 div[data-testid="stMetric"] {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--gw-card-bg);
+    border: 1px solid var(--gw-card-border);
     border-radius: 10px;
     padding: 1rem 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px var(--gw-card-shadow);
     transition: box-shadow 0.2s, transform 0.2s;
 }
 div[data-testid="stMetric"]:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px var(--gw-card-hover-shadow);
     transform: translateY(-1px);
 }
 div[data-testid="stMetric"] label {
     font-size: 0.78rem;
     font-weight: 600;
-    color: #64748b;
+    color: var(--gw-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #1a365d;
+    color: var(--gw-text-heading);
 }
 
 /* ------------------------------------------------------------------ */
 /* Step cards on landing page                                          */
 /* ------------------------------------------------------------------ */
 .step-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
+    background: var(--gw-card-bg);
+    border: 1px solid var(--gw-card-border);
     border-radius: 12px;
     padding: 1.75rem;
     height: 100%;
@@ -119,7 +174,7 @@ div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
     overflow: hidden;
 }
 .step-card:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 24px var(--gw-card-hover-shadow);
     transform: translateY(-2px);
 }
 .step-card .step-number {
@@ -138,12 +193,12 @@ div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
 .step-card h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--gw-text-primary);
     margin: 0 0 0.5rem 0;
 }
 .step-card p {
     font-size: 0.9rem;
-    color: #64748b;
+    color: var(--gw-text-secondary);
     line-height: 1.6;
     margin: 0;
 }
@@ -153,26 +208,26 @@ div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
 /* ------------------------------------------------------------------ */
 .stTabs [data-baseweb="tab-list"] {
     gap: 0;
-    background: #f8fafc;
+    background: var(--gw-bg-secondary);
     border-radius: 10px;
     padding: 4px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--gw-border-color);
 }
 .stTabs [data-baseweb="tab"] {
     border-radius: 8px;
     padding: 0.6rem 1.2rem;
     font-size: 0.85rem;
     font-weight: 500;
-    color: #64748b;
+    color: var(--gw-text-secondary);
     background: transparent;
     border: none;
     transition: all 0.15s;
 }
 .stTabs [aria-selected="true"] {
-    background: #ffffff !important;
-    color: #1a365d !important;
+    background: var(--gw-tab-active-bg) !important;
+    color: var(--gw-tab-active-text) !important;
     font-weight: 600 !important;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 3px var(--gw-card-shadow);
 }
 .stTabs [data-baseweb="tab-highlight"] {
     display: none;
@@ -184,20 +239,16 @@ div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
 /* ------------------------------------------------------------------ */
 /* Sidebar                                                             */
 /* ------------------------------------------------------------------ */
-section[data-testid="stSidebar"] {
-    background: #f8fafc;
-    border-right: 1px solid #e2e8f0;
-}
 section[data-testid="stSidebar"] .stMarkdown h1 {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #1a365d;
+    color: var(--gw-text-heading);
 }
 section[data-testid="stSidebar"] .stMarkdown h2,
 section[data-testid="stSidebar"] .stMarkdown h3 {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #475569;
+    color: var(--gw-text-subheading);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -216,8 +267,8 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 /* Filter section                                                      */
 /* ------------------------------------------------------------------ */
 .filter-bar {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--gw-bg-secondary);
+    border: 1px solid var(--gw-border-color);
     border-radius: 10px;
     padding: 1.25rem;
     margin-bottom: 1rem;
@@ -229,7 +280,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .stDataFrame {
     border-radius: 10px;
     overflow: hidden;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--gw-border-color);
 }
 
 /* ------------------------------------------------------------------ */
@@ -238,12 +289,12 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .stDownloadButton > button {
     border-radius: 8px;
     font-weight: 500;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--gw-border-color);
     transition: all 0.2s;
 }
 .stDownloadButton > button:hover {
-    border-color: #4A90D9;
-    color: #4A90D9;
+    border-color: var(--gw-link-color);
+    color: var(--gw-link-color);
 }
 
 /* ------------------------------------------------------------------ */
@@ -252,24 +303,24 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .section-header {
     font-size: 0.75rem;
     font-weight: 600;
-    color: #94a3b8;
+    color: var(--gw-text-muted);
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 0.75rem;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--gw-border-color);
 }
 
 /* ------------------------------------------------------------------ */
 /* Tooltip-style info boxes                                            */
 /* ------------------------------------------------------------------ */
 .info-tip {
-    background: #eff6ff;
-    border-left: 3px solid #4A90D9;
+    background: var(--gw-info-bg);
+    border-left: 3px solid var(--gw-link-color);
     border-radius: 0 8px 8px 0;
     padding: 0.75rem 1rem;
     font-size: 0.85rem;
-    color: #1e40af;
+    color: var(--gw-info-text);
     margin: 0.5rem 0;
 }
 
@@ -279,20 +330,20 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .guide-header {
     font-size: 1.15rem;
     font-weight: 600;
-    color: #1e293b;
+    color: var(--gw-text-primary);
     margin: 1.5rem 0 0.75rem 0;
     padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--gw-border-color);
 }
 .guide-section h4 {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #1a365d;
+    color: var(--gw-text-heading);
     margin: 0.75rem 0 0.4rem 0;
 }
 .guide-section p, .guide-section li {
     font-size: 0.88rem;
-    color: #475569;
+    color: var(--gw-text-subheading);
     line-height: 1.65;
 }
 .guide-section ul {
@@ -300,11 +351,11 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
     margin: 0.3rem 0;
 }
 .guide-section code {
-    background: #f1f5f9;
+    background: var(--gw-code-bg);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.82rem;
-    color: #1a365d;
+    color: var(--gw-code-text);
 }
 .param-table {
     width: 100%;
@@ -315,37 +366,37 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .param-table th {
     text-align: left;
     padding: 0.5rem 0.75rem;
-    background: #f1f5f9;
-    color: #1a365d;
+    background: var(--gw-bg-tertiary);
+    color: var(--gw-text-heading);
     font-weight: 600;
-    border-bottom: 2px solid #e2e8f0;
+    border-bottom: 2px solid var(--gw-border-color);
 }
 .param-table td {
     padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid #f1f5f9;
-    color: #475569;
+    border-bottom: 1px solid var(--gw-bg-tertiary);
+    color: var(--gw-text-subheading);
     vertical-align: top;
 }
 .param-table tr:hover td {
-    background: #f8fafc;
+    background: var(--gw-bg-secondary);
 }
 .recommend-badge {
     display: inline-block;
-    background: #dcfce7;
-    color: #166534;
+    background: var(--gw-badge-bg);
+    color: var(--gw-badge-text);
     border-radius: 4px;
     padding: 0.1rem 0.4rem;
     font-size: 0.75rem;
     font-weight: 600;
 }
 .gene-example-box {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--gw-bg-secondary);
+    border: 1px solid var(--gw-border-color);
     border-radius: 8px;
     padding: 1rem 1.25rem;
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
-    color: #1e293b;
+    color: var(--gw-text-primary);
     line-height: 1.7;
     margin: 0.5rem 0;
 }
@@ -356,13 +407,13 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .app-footer {
     text-align: center;
     padding: 1.5rem 0 0.5rem 0;
-    color: #94a3b8;
+    color: var(--gw-footer-text);
     font-size: 0.8rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--gw-border-color);
     margin-top: 2rem;
 }
 .app-footer a {
-    color: #4A90D9;
+    color: var(--gw-link-color);
     text-decoration: none;
 }
 .app-footer a:hover {
