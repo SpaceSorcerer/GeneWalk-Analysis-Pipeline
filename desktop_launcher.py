@@ -102,6 +102,12 @@ def main():
     # open; Streamlit's own open is suppressed by headless mode above.
     threading.Thread(target=_open_browser, args=(port,), daemon=True).start()
 
+    # Belt-and-suspenders: also patch Streamlit's own open_browser function
+    # so it becomes a no-op.  This covers cases where Streamlit bypasses the
+    # webbrowser module or the headless flag is not respected in frozen bundles.
+    from streamlit import cli_util
+    cli_util.open_browser = lambda url: None
+
     from streamlit.web.cli import main as st_main
     st_main()
 
