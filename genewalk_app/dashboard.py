@@ -110,13 +110,13 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             st.plotly_chart(
                 volcano_plot(df, padj_col=effective_padj_col,
                              padj_threshold=padj_threshold),
-                use_container_width=True,
+                width="stretch",
             )
         with col_right:
             st.plotly_chart(
                 go_domain_pie(df, padj_col=effective_padj_col,
                               padj_threshold=padj_threshold),
-                use_container_width=True,
+                width="stretch",
             )
 
         if padj_col != "(none)":
@@ -126,11 +126,11 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             )
             if not gene_summary.empty:
                 st.plotly_chart(summary_bar(gene_summary),
-                               use_container_width=True)
+                               width="stretch")
 
         st.plotly_chart(
             pvalue_distribution(df, padj_col=effective_padj_col),
-            use_container_width=True,
+            width="stretch",
         )
 
     # ---- Tab: Per-Gene Explorer -------------------------------------------
@@ -143,14 +143,14 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             st.plotly_chart(
                 gene_bar_chart(df, selected_gene,
                                padj_col=effective_padj_col, top_n=top_n),
-                use_container_width=True,
+                width="stretch",
             )
 
             with st.expander(f"Raw data for {selected_gene}", expanded=False):
                 gene_data = df[df["hgnc_symbol"] == selected_gene]
                 if effective_padj_col in gene_data.columns:
                     gene_data = gene_data.sort_values(effective_padj_col)
-                st.dataframe(gene_data, use_container_width=True, height=300)
+                st.dataframe(gene_data, width="stretch", height=300)
         else:
             st.info("No gene symbols found in results.")
 
@@ -182,7 +182,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
                     padj_threshold=padj_threshold,
                     max_edges=max_edges,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
             st.caption(
                 "Red = genes | Blue = biological process | "
@@ -212,7 +212,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
                     padj_threshold=padj_threshold,
                     max_terms=max_terms,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
         else:
             st.info("No gene symbols found in results.")
@@ -220,7 +220,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
     # ---- Tab: Data Table --------------------------------------------------
     with tab_table:
         st.markdown(f"Showing **{len(filtered):,}** filtered rows")
-        st.dataframe(filtered, use_container_width=True, height=500)
+        st.dataframe(filtered, width="stretch", height=500)
 
         csv_buf = io.StringIO()
         filtered.to_csv(csv_buf, index=False)
