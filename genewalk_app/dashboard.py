@@ -22,6 +22,52 @@ from genewalk_app.visualizations import (
 )
 
 
+def _sorted_genes(
+    df: pd.DataFrame, method: str, padj_col: str, padj_threshold: float,
+) -> list[str]:
+    """Return gene list ordered by the chosen method."""
+    if "hgnc_symbol" not in df.columns:
+        return []
+
+    if method == "Alphabetical":
+        return sorted(df["hgnc_symbol"].dropna().unique().tolist())
+
+    if method == "Input order":
+        # Preserve the row order from the original CSV / GeneWalk output.
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for g in df["hgnc_symbol"].dropna():
+            if g not in seen:
+                seen.add(g)
+                ordered.append(g)
+        return ordered
+
+    if method == "Best p-value" and padj_col in df.columns:
+        best = (
+            df.dropna(subset=[padj_col])
+            .groupby("hgnc_symbol")[padj_col]
+            .min()
+            .sort_values()
+        )
+        return best.index.tolist()
+
+    if method == "Most significant GO terms":
+        sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
+        counts = sig.groupby("hgnc_symbol").size().sort_values(ascending=False)
+        return counts.index.tolist()
+
+    if method == "Mean similarity" and "sim" in df.columns:
+        mean_sim = (
+            df.dropna(subset=["sim"])
+            .groupby("hgnc_symbol")["sim"]
+            .mean()
+            .sort_values(ascending=False)
+        )
+        return mean_sim.index.tolist()
+
+    return sorted(df["hgnc_symbol"].dropna().unique().tolist())
+
+
 def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
     """Render the full interactive results dashboard.
 
@@ -90,11 +136,24 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
         f"{filtered['go_name'].nunique() if 'go_name' in filtered.columns else 'N/A'}",
     )
 
-    # --- Available genes (shared across tabs) ---
-    available_genes = (
-        sorted(df["hgnc_symbol"].dropna().unique().tolist())
-        if "hgnc_symbol" in df.columns
-        else []
+    # --- Gene sort order (shared across tabs) ---
+    sort_methods = [
+        "Alphabetical",
+        "Input order",
+        "Best p-value",
+        "Most significant GO terms",
+        "Mean similarity",
+    ]
+    gene_sort = st.selectbox(
+        "Sort genes by",
+        sort_methods,
+        index=0,
+        help="Controls gene ordering in the Per-Gene Explorer, Network, and "
+             "Heatmap selectors. 'Input order' preserves the order from your "
+             "original gene list / GeneWalk output.",
+    )
+    available_genes = _sorted_genes(
+        df, gene_sort, effective_padj_col, padj_threshold,
     )
 
     # --- Visualization tabs ---

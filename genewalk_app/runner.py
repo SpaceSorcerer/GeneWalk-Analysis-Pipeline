@@ -1,9 +1,11 @@
 """Backend module for running GeneWalk and parsing results."""
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
@@ -26,6 +28,30 @@ DEFAULT_BASE_DIR = Path(tempfile.gettempdir()) / "genewalk_runs"
 
 
 _WRAPPER = str(Path(__file__).with_name("_gw_wrapper.py"))
+
+
+# Mapping of GeneWalk log messages to user-friendly progress descriptions.
+_PROGRESS_PATTERNS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"Downloading", re.I), "Downloading resources..."),
+    (re.compile(r"Reading genes", re.I), "Reading gene list..."),
+    (re.compile(r"Loading|Assembling.*network", re.I), "Building gene network..."),
+    (re.compile(r"Get GO annotations", re.I), "Fetching GO annotations..."),
+    (re.compile(r"DeepWalk.*graph", re.I), "Running DeepWalk on gene network..."),
+    (re.compile(r"DeepWalk.*null", re.I), "Running DeepWalk on null model..."),
+    (re.compile(r"Similarities", re.I), "Computing similarity scores..."),
+    (re.compile(r"Perform.*statistic|p-value|Significance", re.I), "Computing statistics..."),
+    (re.compile(r"generate_plots|Barplot generated", re.I), "Generating plots..."),
+    (re.compile(r"make_html|HTML", re.I), "Writing HTML report..."),
+    (re.compile(r"genewalk_results", re.I), "Writing results CSV..."),
+]
+
+
+def _parse_progress(line: str) -> str | None:
+    """Extract a user-friendly progress message from a GeneWalk log line."""
+    for pattern, message in _PROGRESS_PATTERNS:
+        if pattern.search(line):
+            return message
+    return None
 
 
 def _genewalk_base_cmd() -> list[str]:
@@ -74,8 +100,15 @@ def run_genewalk(
     nreps_null: int = 3,
     alpha_fdr: float = 1.0,
     base_folder: Path | None = None,
+    on_progress: Callable[[str], None] | None = None,
 ) -> dict:
     """Run GeneWalk CLI and return paths to output files.
+
+    Parameters
+    ----------
+    on_progress : callable, optional
+        Called with a short status string whenever GeneWalk enters a new
+        major step (e.g. "Building gene network...", "Computing statistics...").
 
     Returns a dict with keys: 'return_code', 'stdout', 'stderr', 'output_dir'.
     """
@@ -94,11 +127,11 @@ def run_genewalk(
     ]
 
     try:
-        result = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=14400,  # 4 hour timeout
             env=_utf8_env(),
         )
     except FileNotFoundError:
@@ -115,12 +148,26 @@ def run_genewalk(
             "output_dir": base / project,
         }
 
+    # Stream stderr line-by-line and extract progress updates.
+    stderr_lines: list[str] = []
+    last_status: str | None = None
+    for line in proc.stderr:
+        stderr_lines.append(line)
+        if on_progress:
+            status = _parse_progress(line)
+            if status and status != last_status:
+                last_status = status
+                on_progress(status)
+
+    proc.wait()
+    stdout = proc.stdout.read() if proc.stdout else ""
+
     output_dir = base / project
 
     return {
-        "return_code": result.returncode,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
+        "return_code": proc.returncode,
+        "stdout": stdout,
+        "stderr": "".join(stderr_lines),
         "output_dir": output_dir,
     }
 

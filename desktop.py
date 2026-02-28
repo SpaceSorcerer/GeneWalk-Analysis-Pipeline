@@ -204,6 +204,11 @@ if run_clicked and genes:
             f"Starting GeneWalk with {nproc} cores, {nreps_graph} graph reps, "
             f"{nreps_null} null reps..."
         )
+        progress_placeholder = st.empty()
+
+        def _update_progress(msg: str) -> None:
+            progress_placeholder.write(msg)
+
         result = run_genewalk(
             gene_file=gene_file,
             project=project_name,
@@ -213,6 +218,7 @@ if run_clicked and genes:
             nreps_null=nreps_null,
             alpha_fdr=alpha_fdr,
             base_folder=base_folder,
+            on_progress=_update_progress,
         )
 
         st.session_state.run_log = (
