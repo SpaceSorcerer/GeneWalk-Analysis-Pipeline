@@ -61,8 +61,11 @@ with st.sidebar:
                  "GeneWalk or the GeneWalk Desktop app.",
         )
         if uploaded_results is not None:
-            st.session_state.results_df = pd.read_csv(uploaded_results)
-            st.session_state.run_log = "Results loaded from uploaded CSV."
+            try:
+                st.session_state.results_df = pd.read_csv(uploaded_results)
+                st.session_state.run_log = "Results loaded from uploaded CSV."
+            except Exception as exc:
+                st.error(f"Could not read uploaded CSV: {exc}")
     else:
         if SAMPLE_RESULTS_PATH.exists() and st.session_state.results_df is None:
             st.session_state.results_df = pd.read_csv(SAMPLE_RESULTS_PATH)

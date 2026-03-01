@@ -5,3 +5,4 @@ plotly>=5.18
 pandas>=2.0
 networkx>=3.0
 numpy
+gseapy>=1.1

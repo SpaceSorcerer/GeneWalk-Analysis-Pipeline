@@ -1,9 +1,11 @@
 """Backend module for running GeneWalk and parsing results."""
 
 import os
+import re
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 import pandas as pd
@@ -26,6 +28,30 @@ DEFAULT_BASE_DIR = Path(tempfile.gettempdir()) / "genewalk_runs"
 
 
 _WRAPPER = str(Path(__file__).with_name("_gw_wrapper.py"))
+
+
+# Mapping of GeneWalk log messages to user-friendly progress descriptions.
+_PROGRESS_PATTERNS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"Downloading", re.I), "Downloading resources..."),
+    (re.compile(r"Reading genes", re.I), "Reading gene list..."),
+    (re.compile(r"Loading|Assembling.*network", re.I), "Building gene network..."),
+    (re.compile(r"Get GO annotations", re.I), "Fetching GO annotations..."),
+    (re.compile(r"DeepWalk.*graph", re.I), "Running DeepWalk on gene network..."),
+    (re.compile(r"DeepWalk.*null", re.I), "Running DeepWalk on null model..."),
+    (re.compile(r"Similarities", re.I), "Computing similarity scores..."),
+    (re.compile(r"Perform.*statistic|p-value|Significance", re.I), "Computing statistics..."),
+    (re.compile(r"generate_plots|Barplot generated", re.I), "Generating plots..."),
+    (re.compile(r"make_html|HTML", re.I), "Writing HTML report..."),
+    (re.compile(r"genewalk_results", re.I), "Writing results CSV..."),
+]
+
+
+def _parse_progress(line: str) -> str | None:
+    """Extract a user-friendly progress message from a GeneWalk log line."""
+    for pattern, message in _PROGRESS_PATTERNS:
+        if pattern.search(line):
+            return message
+    return None
 
 
 def _genewalk_base_cmd() -> list[str]:
@@ -52,16 +78,30 @@ def is_genewalk_available() -> bool:
     """Return True if the GeneWalk CLI can be invoked."""
     try:
         cmd = _genewalk_base_cmd() + ["--help"]
-        subprocess.run(cmd, capture_output=True, timeout=15, env=_utf8_env())
-        return True
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+        result = subprocess.run(cmd, capture_output=True, timeout=15, env=_utf8_env())
+        return result.returncode == 0
+    except (FileNotFoundError, PermissionError, subprocess.TimeoutExpired):
         return False
+
+
+def _sanitize_project_name(name: str) -> str:
+    """Sanitize a project name to prevent path traversal and bad chars."""
+    # Strip leading/trailing whitespace and path separators
+    name = name.strip().strip("/").strip("\\")
+    # Replace path separators and other problematic characters
+    name = re.sub(r'[/\\:*?"<>|.\x00]', "_", name)
+    # Collapse repeated underscores
+    name = re.sub(r"_+", "_", name).strip("_")
+    return name or "genewalk_analysis"
 
 
 def save_gene_list(genes: list[str], dest: Path) -> Path:
     """Write a list of gene identifiers to a text file."""
+    cleaned = [g.strip() for g in genes if g.strip()]
+    if not cleaned:
+        raise ValueError("Gene list is empty after removing blank entries.")
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text("\n".join(g.strip() for g in genes if g.strip()) + "\n")
+    dest.write_text("\n".join(cleaned) + "\n", encoding="utf-8")
     return dest
 
 
@@ -74,8 +114,15 @@ def run_genewalk(
     nreps_null: int = 3,
     alpha_fdr: float = 1.0,
     base_folder: Path | None = None,
+    on_progress: Callable[[str], None] | None = None,
 ) -> dict:
     """Run GeneWalk CLI and return paths to output files.
+
+    Parameters
+    ----------
+    on_progress : callable, optional
+        Called with a short status string whenever GeneWalk enters a new
+        major step (e.g. "Building gene network...", "Computing statistics...").
 
     Returns a dict with keys: 'return_code', 'stdout', 'stderr', 'output_dir'.
     """
@@ -94,11 +141,11 @@ def run_genewalk(
     ]
 
     try:
-        result = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=14400,  # 4 hour timeout
             env=_utf8_env(),
         )
     except FileNotFoundError:
@@ -115,12 +162,38 @@ def run_genewalk(
             "output_dir": base / project,
         }
 
+    # Stream stderr line-by-line and extract progress updates.
+    stderr_lines: list[str] = []
+    last_status: str | None = None
+    try:
+        for line in proc.stderr:
+            stderr_lines.append(line)
+            if on_progress:
+                try:
+                    status = _parse_progress(line)
+                    if status and status != last_status:
+                        last_status = status
+                        on_progress(status)
+                except Exception:
+                    pass  # Don't let callback errors kill the reader
+    finally:
+        # Ensure the subprocess is cleaned up even on exceptions
+        try:
+            proc.stderr.close()
+        except Exception:
+            pass
+        try:
+            proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+
     output_dir = base / project
 
     return {
-        "return_code": result.returncode,
-        "stdout": result.stdout,
-        "stderr": result.stderr,
+        "return_code": proc.returncode,
+        "stdout": "",
+        "stderr": "".join(stderr_lines),
         "output_dir": output_dir,
     }
 
@@ -136,9 +209,29 @@ def find_results_csv(output_dir: Path) -> Path | None:
     return None
 
 
+_REQUIRED_COLUMNS = {"hgnc_symbol", "go_name", "sim"}
+
+
 def load_results(csv_path: Path) -> pd.DataFrame:
-    """Load and clean GeneWalk results CSV."""
-    df = pd.read_csv(csv_path)
+    """Load and clean GeneWalk results CSV.
+
+    Raises
+    ------
+    ValueError
+        If the CSV is empty or missing required columns.
+    """
+    try:
+        df = pd.read_csv(csv_path)
+    except (pd.errors.EmptyDataError, pd.errors.ParserError) as exc:
+        raise ValueError(f"Could not parse results CSV: {exc}") from exc
+    if df.empty:
+        raise ValueError("Results CSV is empty (0 rows).")
+    missing = _REQUIRED_COLUMNS - set(df.columns)
+    if missing:
+        raise ValueError(
+            f"Results CSV is missing required columns: {', '.join(sorted(missing))}. "
+            f"Found columns: {', '.join(df.columns.tolist())}"
+        )
     return df
 
 
@@ -161,7 +254,12 @@ def get_gene_summary(df: pd.DataFrame, padj_col: str = "gene_padj", padj_thresho
     """Summarize results per gene: count of significant GO terms."""
     if padj_col not in df.columns:
         return pd.DataFrame()
-    sig = df[df[padj_col] <= padj_threshold]
+    required = {"hgnc_symbol", "go_name", "sim"}
+    if not required.issubset(df.columns):
+        return pd.DataFrame()
+    sig = df[df[padj_col] <= padj_threshold].sort_values(padj_col, ascending=True)
+    if sig.empty:
+        return pd.DataFrame()
     summary = (
         sig.groupby("hgnc_symbol")
         .agg(

@@ -18,6 +18,7 @@ Path(tempfile.gettempdir(), ".genewalk_client_connected").write_text("")
 
 from genewalk_app.dashboard import render_dashboard
 from genewalk_app.runner import (
+    _sanitize_project_name,
     find_results_csv,
     is_genewalk_available,
     load_results,
@@ -75,7 +76,10 @@ with st.sidebar:
             help="Plain text file with one gene identifier per line.",
         )
         if uploaded:
-            content = uploaded.getvalue().decode("utf-8")
+            try:
+                content = uploaded.getvalue().decode("utf-8")
+            except UnicodeDecodeError:
+                content = uploaded.getvalue().decode("latin-1")
             genes = [g.strip() for g in content.splitlines() if g.strip()]
     elif input_method == "Paste genes":
         pasted = st.text_area(
@@ -188,8 +192,11 @@ with st.sidebar:
 # Handle uploaded / run results
 # ---------------------------------------------------------------------------
 if uploaded_results is not None:
-    st.session_state.results_df = pd.read_csv(uploaded_results)
-    st.session_state.run_log = "Results loaded from uploaded CSV."
+    try:
+        st.session_state.results_df = pd.read_csv(uploaded_results)
+        st.session_state.run_log = "Results loaded from uploaded CSV."
+    except Exception as exc:
+        st.error(f"Could not read uploaded CSV: {exc}")
 
 if run_clicked and genes:
     with st.status("Running GeneWalk analysis...", expanded=True) as status:
@@ -204,15 +211,22 @@ if run_clicked and genes:
             f"Starting GeneWalk with {nproc} cores, {nreps_graph} graph reps, "
             f"{nreps_null} null reps..."
         )
+        progress_placeholder = st.empty()
+
+        def _update_progress(msg: str) -> None:
+            progress_placeholder.write(msg)
+
+        safe_project = _sanitize_project_name(project_name)
         result = run_genewalk(
             gene_file=gene_file,
-            project=project_name,
+            project=safe_project,
             id_type=id_type,
             nproc=nproc,
             nreps_graph=nreps_graph,
             nreps_null=nreps_null,
             alpha_fdr=alpha_fdr,
             base_folder=base_folder,
+            on_progress=_update_progress,
         )
 
         st.session_state.run_log = (
@@ -224,22 +238,33 @@ if run_clicked and genes:
         csv_path = find_results_csv(result["output_dir"])
         if result["return_code"] == 0:
             if csv_path:
-                st.session_state.results_df = load_results(csv_path)
-                status.update(label="Analysis complete!", state="complete")
+                try:
+                    st.session_state.results_df = load_results(csv_path)
+                except ValueError as exc:
+                    st.error(str(exc))
+                    status.update(label="Results CSV is invalid", state="error")
+                    csv_path = None  # prevent duplicate handling below
+                if csv_path:
+                    status.update(label="Analysis complete!", state="complete")
             else:
                 status.update(label="Results CSV not found", state="error")
         else:
             if csv_path:
-                st.session_state.results_df = load_results(csv_path)
-                st.session_state.run_log += (
-                    "\n\n**Note:** GeneWalk exited with an error (likely "
-                    "during HTML report generation), but the results CSV "
-                    "was found and loaded successfully."
-                )
-                status.update(
-                    label="Analysis complete (with warnings)", state="complete"
-                )
-            else:
+                try:
+                    st.session_state.results_df = load_results(csv_path)
+                except ValueError as exc:
+                    st.error(str(exc))
+                    csv_path = None
+                if csv_path:
+                    st.session_state.run_log += (
+                        "\n\n**Note:** GeneWalk exited with an error (likely "
+                        "during HTML report generation), but the results CSV "
+                        "was found and loaded successfully."
+                    )
+                    status.update(
+                        label="Analysis complete (with warnings)", state="complete"
+                    )
+            if not csv_path and result["return_code"] != 0:
                 status.update(
                     label="GeneWalk exited with an error", state="error"
                 )

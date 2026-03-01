@@ -58,7 +58,7 @@ def _patch_gene_mapper():
 
         # Process the MGI-Entrez mapping file with robust row handling
         self.entrez_to_mgi = {}
-        with open(self.mgi_entrez_file, "r") as fh:
+        with open(self.mgi_entrez_file, "r", encoding="utf-8") as fh:
             csvreader = csv.reader(fh, delimiter="\t")
             for row in csvreader:
                 if len(row) < 9:
@@ -95,7 +95,7 @@ def _patch_gene_mapper():
                     continue
                 (hgnc_id, hgnc_name, description, prev_sym_entry,
                  hgnc_status, entrez_id, uniprot_id, mgi_id, rgd_id,
-                 ensembl_id) = row
+                 ensembl_id) = row[:10]
                 hgnc_id = hgnc_id[5:]
                 if hgnc_status in {"Approved", "Entry Withdrawn"}:
                     self.hgnc_id_to_name[hgnc_id] = hgnc_name

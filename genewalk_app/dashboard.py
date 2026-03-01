@@ -22,6 +22,52 @@ from genewalk_app.visualizations import (
 )
 
 
+def _sorted_genes(
+    df: pd.DataFrame, method: str, padj_col: str, padj_threshold: float,
+) -> list[str]:
+    """Return gene list ordered by the chosen method."""
+    if "hgnc_symbol" not in df.columns:
+        return []
+
+    if method == "Alphabetical":
+        return sorted(df["hgnc_symbol"].dropna().unique().tolist())
+
+    if method == "Input order":
+        # Preserve the row order from the original CSV / GeneWalk output.
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for g in df["hgnc_symbol"].dropna():
+            if g not in seen:
+                seen.add(g)
+                ordered.append(g)
+        return ordered
+
+    if method == "Best p-value" and padj_col in df.columns:
+        best = (
+            df.dropna(subset=[padj_col])
+            .groupby("hgnc_symbol")[padj_col]
+            .min()
+            .sort_values()
+        )
+        return best.index.tolist()
+
+    if method == "Most significant GO terms":
+        sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
+        counts = sig.groupby("hgnc_symbol").size().sort_values(ascending=False)
+        return counts.index.tolist()
+
+    if method == "Mean similarity" and "sim" in df.columns:
+        mean_sim = (
+            df.dropna(subset=["sim"])
+            .groupby("hgnc_symbol")["sim"]
+            .mean()
+            .sort_values(ascending=False)
+        )
+        return mean_sim.index.tolist()
+
+    return sorted(df["hgnc_symbol"].dropna().unique().tolist())
+
+
 def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
     """Render the full interactive results dashboard.
 
@@ -90,11 +136,83 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
         f"{filtered['go_name'].nunique() if 'go_name' in filtered.columns else 'N/A'}",
     )
 
-    # --- Available genes (shared across tabs) ---
-    available_genes = (
-        sorted(df["hgnc_symbol"].dropna().unique().tolist())
-        if "hgnc_symbol" in df.columns
-        else []
+    # --- Interpretive guide ---
+    with st.expander("How to interpret these results", expanded=False):
+        st.markdown("""
+<div class="guide-section">
+
+<h4>What GeneWalk measures</h4>
+<p>GeneWalk does <strong>not</strong> measure how much a gene changes
+(fold-change, expression level, etc.). Instead, it asks: <em>"Given the
+genes you provided, which GO functions are most relevant to this specific
+biological context?"</em></p>
+
+<p>It works by building a network of your genes and all their known GO
+annotations, then using DeepWalk (a graph-embedding algorithm) to learn
+which gene&ndash;function associations are <strong>specific to your gene
+set</strong> versus generic background knowledge.</p>
+
+<h4>Key columns explained</h4>
+<ul>
+<li><strong>Similarity score (sim)</strong> &mdash; How closely a gene
+and a GO term are embedded in the context-specific network. Higher =
+stronger association <em>in this context</em>. A gene may have a known
+GO annotation that scores low here because it&rsquo;s not relevant to
+your particular set of genes.</li>
+<li><strong>gene_padj</strong> &mdash; Per-gene adjusted p-value. Tests
+whether this gene&ndash;GO similarity is higher than expected by chance,
+correcting for multiple GO terms tested within each gene. Good for
+exploring what&rsquo;s relevant <em>for a specific gene</em>.</li>
+<li><strong>global_padj</strong> &mdash; Global adjusted p-value. Same
+test but corrected across <em>all genes and all GO terms</em>
+simultaneously. Much more stringent &mdash; use this for high-confidence
+hits you would report in a paper.</li>
+</ul>
+
+<h4>What does "most significant" mean here?</h4>
+<p>A gene with many significant GO terms has many functions that are
+specifically relevant to your biological context &mdash; it&rsquo;s a
+<strong>functional hub</strong> in your gene set. This does NOT mean
+it&rsquo;s the most differentially expressed or the most important
+biologically. It means GeneWalk found strong, context-specific evidence
+connecting it to multiple functions.</p>
+
+<h4>Important caveats</h4>
+<ul>
+<li><strong>No directionality:</strong> GeneWalk does not know whether
+your genes are up- or down-regulated. It treats all input genes equally.
+If directionality matters, consider running separate analyses for up-
+and down-regulated gene lists.</li>
+<li><strong>Annotation bias:</strong> Well-studied genes (e.g. TP53,
+EGFR) have more GO annotations and may appear more "significant" simply
+because more is known about them. Sparse annotations for less-studied
+genes can lead to fewer significant results, not necessarily less
+biological importance.</li>
+<li><strong>Context is your gene list:</strong> Results change depending
+on which genes you include. The same gene may have different significant
+GO terms when analyzed with different gene sets.</li>
+</ul>
+</div>
+        """, unsafe_allow_html=True)
+
+    # --- Gene sort order (shared across tabs) ---
+    sort_methods = [
+        "Alphabetical",
+        "Input order",
+        "Best p-value",
+        "Most significant GO terms",
+        "Mean similarity",
+    ]
+    gene_sort = st.selectbox(
+        "Sort genes by",
+        sort_methods,
+        index=0,
+        help="Controls gene ordering in the Per-Gene Explorer, Network, and "
+             "Heatmap selectors. 'Input order' preserves the order from your "
+             "original gene list / GeneWalk output.",
+    )
+    available_genes = _sorted_genes(
+        df, gene_sort, effective_padj_col, padj_threshold,
     )
 
     # --- Visualization tabs ---
