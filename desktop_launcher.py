@@ -91,10 +91,31 @@ def _open_browser(port: int):
     webbrowser.open(f"http://localhost:{port}")
 
 
+def _resolve_app_path(app_filename: str) -> str:
+    """Return the absolute path to a Streamlit app file.
+
+    In a frozen PyInstaller bundle, the file lives inside sys._MEIPASS.
+    Otherwise it is next to this launcher script.
+    """
+    if getattr(sys, "frozen", False):
+        return os.path.join(sys._MEIPASS, app_filename)
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), app_filename)
+
+
 def main():
     # Required for PyInstaller on Windows when any code uses multiprocessing.
     import multiprocessing
     multiprocessing.freeze_support()
+
+    # Determine which app to launch.  --comparison flag launches the
+    # GSEA + GeneWalk comparison pipeline; default is the standard desktop app.
+    if "--comparison" in sys.argv:
+        sys.argv.remove("--comparison")
+        app_filename = "comparison_app.py"
+        label = "GeneWalk + GSEA Comparison Pipeline"
+    else:
+        app_filename = "desktop.py"
+        label = "GeneWalk"
 
     port = _find_free_port()
 
@@ -105,10 +126,8 @@ def main():
     # When running as a frozen PyInstaller bundle, sys._MEIPASS points to
     # the temporary directory where PyInstaller extracted the bundled files.
     if getattr(sys, "frozen", False):
-        bundle_dir = sys._MEIPASS
-        app_path = os.path.join(bundle_dir, "desktop.py")
-
         # Point Streamlit at the bundled config
+        bundle_dir = sys._MEIPASS
         config_dir = os.path.join(bundle_dir, ".streamlit")
         if os.path.isdir(config_dir):
             os.environ["STREAMLIT_CONFIG_DIR"] = config_dir
@@ -117,11 +136,10 @@ def main():
         static_dir = os.path.join(bundle_dir, "streamlit", "static")
         if os.path.isdir(static_dir):
             os.environ["STREAMLIT_STATIC_DIR"] = static_dir
-    else:
-        app_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                "desktop.py")
 
-    print(f"Starting GeneWalk on http://localhost:{port}")
+    app_path = _resolve_app_path(app_filename)
+
+    print(f"Starting {label} on http://localhost:{port}")
 
     # Force headless mode via environment variable — this is the most
     # reliable way to prevent Streamlit from opening its own browser tab.
