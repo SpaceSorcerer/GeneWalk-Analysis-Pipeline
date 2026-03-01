@@ -6,10 +6,11 @@ import pandas as pd
 
 
 def detect_deg_columns(df: pd.DataFrame) -> dict[str, str | None]:
-    """Auto-detect gene, log2FC, and p-value columns in a DEG table.
+    """Auto-detect gene, log2FC, p-value, and DESeq2-specific columns.
 
-    Returns a dict with keys 'gene', 'log2fc', 'padj' mapped to the best
-    matching column name, or *None* if no match is found.
+    Returns a dict with keys 'gene', 'log2fc', 'padj', 'basemean',
+    'lfcse', 'stat', 'pvalue' mapped to the best matching column name,
+    or *None* if no match is found.
     """
     cols = {c.lower(): c for c in df.columns}
 
@@ -24,7 +25,21 @@ def detect_deg_columns(df: pd.DataFrame) -> dict[str, str | None]:
     padj_candidates = [
         "padj", "adj.p.val", "adj_pval", "fdr", "q_value", "qvalue",
         "p_adj", "adjusted_pvalue", "adjpvalue", "bh",
-        "pvalue", "p_value", "pval", "p-value",
+    ]
+    basemean_candidates = [
+        "basemean", "base_mean", "meanexpression", "averageexpression",
+        "aveexpr",
+    ]
+    lfcse_candidates = [
+        "lfcse", "lfc_se", "logfc_se", "se", "standarderror",
+    ]
+    stat_candidates = [
+        "stat", "statistic", "wald_statistic", "t_statistic",
+        "test_statistic",
+    ]
+    pvalue_candidates = [
+        "pvalue", "p_value", "pval", "p-value", "p.value",
+        "nominal_pvalue", "rawpvalue",
     ]
 
     def _find(candidates: list[str]) -> str | None:
@@ -37,6 +52,10 @@ def detect_deg_columns(df: pd.DataFrame) -> dict[str, str | None]:
         "gene": _find(gene_candidates),
         "log2fc": _find(log2fc_candidates),
         "padj": _find(padj_candidates),
+        "basemean": _find(basemean_candidates),
+        "lfcse": _find(lfcse_candidates),
+        "stat": _find(stat_candidates),
+        "pvalue": _find(pvalue_candidates),
     }
 
 

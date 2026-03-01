@@ -371,8 +371,13 @@ def gene_set_summary_metrics(
             metrics[f"gw_{label}_sig_terms"] = 0
 
     if gsea_df is not None and not gsea_df.empty and "fdr" in gsea_df.columns:
-        metrics["gsea_sig_up"] = len(gsea_df[(gsea_df["fdr"] <= gsea_fdr) & (gsea_df.get("nes", 0) > 0)])
-        metrics["gsea_sig_down"] = len(gsea_df[(gsea_df["fdr"] <= gsea_fdr) & (gsea_df.get("nes", 0) < 0)])
+        sig_gsea = gsea_df[gsea_df["fdr"] <= gsea_fdr]
+        if "nes" in sig_gsea.columns:
+            metrics["gsea_sig_up"] = int((sig_gsea["nes"] > 0).sum())
+            metrics["gsea_sig_down"] = int((sig_gsea["nes"] < 0).sum())
+        else:
+            metrics["gsea_sig_up"] = len(sig_gsea)
+            metrics["gsea_sig_down"] = 0
     else:
         metrics["gsea_sig_up"] = 0
         metrics["gsea_sig_down"] = 0
