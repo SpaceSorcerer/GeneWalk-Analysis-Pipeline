@@ -38,6 +38,17 @@ from genewalk_app.comparison_viz import (
     ora_bar_chart,
     shared_terms_bar,
 )
+from genewalk_app.deg_visualizations import (
+    basemean_distribution,
+    deg_category_pie,
+    deg_summary_counts,
+    lfc_se_scatter,
+    lfc_vs_stat_scatter,
+    ma_plot,
+    padj_histogram,
+    pvalue_histogram,
+    top_genes_bar,
+)
 from genewalk_app.dashboard import render_dashboard
 from genewalk_app.gsea_runner import DEFAULT_GENE_SETS, run_gsea_prerank, run_ora
 from genewalk_app.runner import (
@@ -68,6 +79,8 @@ st.markdown(get_custom_css(), unsafe_allow_html=True)
 # ---------------------------------------------------------------------------
 _defaults = {
     "deg_table": None,
+    "deg_raw": None,
+    "deg_col_map": {},
     "up_genes": [],
     "down_genes": [],
     "gw_results_up": None,
@@ -127,9 +140,11 @@ with st.sidebar:
 
     # ---- Column mapping ----
     gene_col = log2fc_col = padj_col = None
+    basemean_col_name = lfcse_col_name = stat_col_name = pvalue_col_name = None
     if deg_df is not None:
         detected = detect_deg_columns(deg_df)
         all_cols = deg_df.columns.tolist()
+        none_cols = ["(none)"] + all_cols
 
         st.markdown('<p class="section-header">Column Mapping</p>',
                     unsafe_allow_html=True)
@@ -152,6 +167,41 @@ with st.sidebar:
             index=all_cols.index(detected["padj"]) if detected["padj"] else min(2, len(all_cols) - 1),
             help="Column containing adjusted p-values (FDR).",
         )
+
+        with st.expander("Additional DESeq2 columns (optional)", expanded=False):
+            basemean_col_name = st.selectbox(
+                "baseMean column",
+                none_cols,
+                index=none_cols.index(detected["basemean"]) if detected["basemean"] else 0,
+                help="Mean of normalized counts (DESeq2 baseMean).",
+            )
+            lfcse_col_name = st.selectbox(
+                "lfcSE column",
+                none_cols,
+                index=none_cols.index(detected["lfcse"]) if detected["lfcse"] else 0,
+                help="Standard error of the log2FC estimate.",
+            )
+            stat_col_name = st.selectbox(
+                "Wald statistic column",
+                none_cols,
+                index=none_cols.index(detected["stat"]) if detected["stat"] else 0,
+                help="Wald test statistic (DESeq2 stat column).",
+            )
+            pvalue_col_name = st.selectbox(
+                "Raw p-value column",
+                none_cols,
+                index=none_cols.index(detected["pvalue"]) if detected["pvalue"] else 0,
+                help="Unadjusted p-value (before BH correction).",
+            )
+            # Clean up "(none)" selections
+            if basemean_col_name == "(none)":
+                basemean_col_name = None
+            if lfcse_col_name == "(none)":
+                lfcse_col_name = None
+            if stat_col_name == "(none)":
+                stat_col_name = None
+            if pvalue_col_name == "(none)":
+                pvalue_col_name = None
 
         with st.expander("Preview DEG table", expanded=False):
             st.dataframe(deg_df.head(20), height=250)
@@ -267,7 +317,33 @@ if run_clicked and deg_df is not None and gene_col and log2fc_col and padj_col:
         st.error(str(exc))
         st.stop()
 
+    # Carry forward extra DESeq2 columns under standardized names
+    col_map = {"gene": gene_col, "log2fc": log2fc_col, "padj": padj_col}
+    if basemean_col_name and basemean_col_name in deg_df.columns and basemean_col_name not in (gene_col, log2fc_col, padj_col):
+        if basemean_col_name in parsed.columns:
+            parsed = parsed.rename(columns={basemean_col_name: "baseMean"})
+        col_map["basemean"] = "baseMean"
+    if lfcse_col_name and lfcse_col_name in deg_df.columns and lfcse_col_name not in (gene_col, log2fc_col, padj_col):
+        if lfcse_col_name in parsed.columns:
+            parsed = parsed.rename(columns={lfcse_col_name: "lfcSE"})
+        col_map["lfcse"] = "lfcSE"
+    if stat_col_name and stat_col_name in deg_df.columns and stat_col_name not in (gene_col, log2fc_col, padj_col):
+        if stat_col_name in parsed.columns:
+            parsed = parsed.rename(columns={stat_col_name: "stat"})
+        col_map["stat"] = "stat"
+    if pvalue_col_name and pvalue_col_name in deg_df.columns and pvalue_col_name not in (gene_col, log2fc_col, padj_col):
+        if pvalue_col_name in parsed.columns:
+            parsed = parsed.rename(columns={pvalue_col_name: "pvalue"})
+        col_map["pvalue"] = "pvalue"
+
+    # Convert extra columns to numeric
+    for extra_col in ["baseMean", "lfcSE", "stat", "pvalue"]:
+        if extra_col in parsed.columns:
+            parsed[extra_col] = pd.to_numeric(parsed[extra_col], errors="coerce")
+
     st.session_state.deg_table = parsed
+    st.session_state.deg_raw = deg_df
+    st.session_state.deg_col_map = col_map
     up_genes, down_genes = split_deg_lists(parsed, fc_threshold, sig_threshold)
     st.session_state.up_genes = up_genes
     st.session_state.down_genes = down_genes
@@ -563,7 +639,7 @@ methods will miss some overlaps.</li>
 
 # ---- Tabs ----
 st.markdown("")
-available_tabs = ["Overview"]
+available_tabs = ["Overview", "DEG Explorer"]
 if gw_up is not None or gw_down is not None:
     available_tabs.append("GeneWalk Comparison")
 if gsea_res is not None and not gsea_res.empty:
@@ -591,6 +667,254 @@ with tabs[tab_idx]:
                               padj_threshold=gw_padj_threshold),
             width="stretch",
         )
+
+# ---- Tab: DEG Explorer ----
+with tabs[tab_idx]:
+    tab_idx += 1
+
+    if deg is not None and not deg.empty:
+        # ---- Dynamic column filters ----
+        st.markdown(
+            '<div class="info-tip">Use these filters to explore your DESeq2 '
+            "results. All plots and the table below update in real time. "
+            "Filtered genes are used to compute summary statistics.</div>",
+            unsafe_allow_html=True,
+        )
+
+        # Build filter controls dynamically for all numeric columns
+        numeric_cols = deg.select_dtypes(include="number").columns.tolist()
+        # Separate known columns from generic numeric ones
+        known_filters = []
+        if "baseMean" in numeric_cols:
+            known_filters.append("baseMean")
+        if "log2fc" in numeric_cols:
+            known_filters.append("log2fc")
+        if "lfcSE" in numeric_cols:
+            known_filters.append("lfcSE")
+        if "stat" in numeric_cols:
+            known_filters.append("stat")
+        if "pvalue" in numeric_cols:
+            known_filters.append("pvalue")
+        if "padj" in numeric_cols:
+            known_filters.append("padj")
+        other_numeric = [c for c in numeric_cols if c not in known_filters]
+
+        st.markdown('<p class="section-header">Filters</p>',
+                    unsafe_allow_html=True)
+
+        deg_filtered = deg.copy()
+
+        # Known DESeq2 column filters with sensible defaults
+        fcols = st.columns(min(len(known_filters) + len(other_numeric), 4) or 1)
+        fi = 0
+
+        if "baseMean" in known_filters:
+            col_min = float(deg["baseMean"].min()) if not deg["baseMean"].isna().all() else 0.0
+            col_max = float(deg["baseMean"].max()) if not deg["baseMean"].isna().all() else 100000.0
+            bm_min = fcols[fi % len(fcols)].number_input(
+                "baseMean >=",
+                min_value=0.0,
+                max_value=col_max,
+                value=0.0,
+                step=10.0,
+                help="Filter out lowly-expressed genes. DESeq2 recommends "
+                     "baseMean >= 10-20 for reliable results.",
+            )
+            deg_filtered = deg_filtered[deg_filtered["baseMean"] >= bm_min]
+            fi += 1
+
+        if "padj" in known_filters:
+            padj_max = fcols[fi % len(fcols)].number_input(
+                "padj <=",
+                min_value=0.0,
+                max_value=1.0,
+                value=1.0,
+                step=0.01,
+                format="%.3f",
+                help="Show only genes below this adjusted p-value.",
+            )
+            deg_filtered = deg_filtered[
+                deg_filtered["padj"].isna() | (deg_filtered["padj"] <= padj_max)
+            ]
+            fi += 1
+
+        if "log2fc" in known_filters:
+            lfc_abs_min = fcols[fi % len(fcols)].number_input(
+                "|log2FC| >=",
+                min_value=0.0,
+                max_value=20.0,
+                value=0.0,
+                step=0.25,
+                help="Show only genes with absolute fold-change above this.",
+            )
+            deg_filtered = deg_filtered[deg_filtered["log2fc"].abs() >= lfc_abs_min]
+            fi += 1
+
+        if "pvalue" in known_filters:
+            pv_max = fcols[fi % len(fcols)].number_input(
+                "pvalue <=",
+                min_value=0.0,
+                max_value=1.0,
+                value=1.0,
+                step=0.01,
+                format="%.4f",
+                help="Filter by raw (unadjusted) p-value.",
+            )
+            deg_filtered = deg_filtered[
+                deg_filtered["pvalue"].isna() | (deg_filtered["pvalue"] <= pv_max)
+            ]
+            fi += 1
+
+        # Extra numeric column filters in an expander
+        if other_numeric:
+            with st.expander("Additional column filters", expanded=False):
+                extra_cols = st.columns(min(len(other_numeric), 3))
+                for j, col_name in enumerate(other_numeric):
+                    col_vals = deg_filtered[col_name].dropna()
+                    if col_vals.empty:
+                        continue
+                    cmin, cmax = float(col_vals.min()), float(col_vals.max())
+                    if cmin == cmax:
+                        continue
+                    rng = extra_cols[j % len(extra_cols)].slider(
+                        col_name,
+                        min_value=cmin,
+                        max_value=cmax,
+                        value=(cmin, cmax),
+                        key=f"deg_filter_{col_name}",
+                    )
+                    deg_filtered = deg_filtered[
+                        deg_filtered[col_name].between(rng[0], rng[1])
+                        | deg_filtered[col_name].isna()
+                    ]
+
+        # Gene search
+        gene_search = st.text_input(
+            "Search genes",
+            placeholder="e.g. BRAF, KRAS, MYC",
+            help="Comma-separated list. Shows only matching genes in the table.",
+        )
+        if gene_search.strip():
+            search_terms = [g.strip().upper() for g in gene_search.split(",") if g.strip()]
+            if "gene" in deg_filtered.columns:
+                deg_filtered = deg_filtered[
+                    deg_filtered["gene"].str.upper().isin(search_terms)
+                ]
+
+        # ---- Summary metrics ----
+        st.markdown("")
+        deg_counts = deg_summary_counts(
+            deg_filtered, "log2fc", "padj", fc_threshold, sig_threshold,
+        )
+        dm = st.columns(6)
+        dm[0].metric("Total Genes", f"{deg_counts['total_genes']:,}")
+        dm[1].metric("Significant", f"{deg_counts['significant']:,}")
+        dm[2].metric("Up-regulated", f"{deg_counts['up_regulated']:,}")
+        dm[3].metric("Down-regulated", f"{deg_counts['down_regulated']:,}")
+        dm[4].metric("Not Significant", f"{deg_counts['not_significant']:,}")
+        dm[5].metric("% Significant", f"{deg_counts['pct_significant']}%")
+
+        # ---- Sub-tabs for plots ----
+        deg_sub = st.tabs([
+            "Volcano", "MA Plot", "Top Genes",
+            "P-value Dist.", "Category", "Diagnostics",
+        ])
+
+        with deg_sub[0]:
+            st.plotly_chart(
+                deg_overview_volcano(deg_filtered, fc_threshold, sig_threshold),
+                width="stretch",
+            )
+
+        with deg_sub[1]:
+            if "baseMean" in deg_filtered.columns:
+                st.plotly_chart(
+                    ma_plot(deg_filtered, "baseMean", "log2fc", "padj",
+                            fc_threshold, sig_threshold),
+                    width="stretch",
+                )
+            else:
+                st.info("MA plot requires a baseMean column. Map it in the sidebar under 'Additional DESeq2 columns'.")
+
+        with deg_sub[2]:
+            top_n_deg = st.slider("Number of top genes", 10, 100, 30, key="deg_top_n")
+            st.plotly_chart(
+                top_genes_bar(deg_filtered, "log2fc", "padj",
+                              sig_threshold, top_n_deg),
+                width="stretch",
+            )
+
+        with deg_sub[3]:
+            pv_col1, pv_col2 = st.columns(2)
+            with pv_col1:
+                if "pvalue" in deg_filtered.columns:
+                    st.plotly_chart(
+                        pvalue_histogram(deg_filtered, "pvalue"),
+                        width="stretch",
+                    )
+                else:
+                    st.info("Raw p-value column not mapped.")
+            with pv_col2:
+                st.plotly_chart(
+                    padj_histogram(deg_filtered, "padj"),
+                    width="stretch",
+                )
+
+        with deg_sub[4]:
+            cat_col1, cat_col2 = st.columns(2)
+            with cat_col1:
+                st.plotly_chart(
+                    deg_category_pie(deg_filtered, "log2fc", "padj",
+                                     fc_threshold, sig_threshold),
+                    width="stretch",
+                )
+            with cat_col2:
+                if "baseMean" in deg_filtered.columns:
+                    st.plotly_chart(
+                        basemean_distribution(deg_filtered, "baseMean"),
+                        width="stretch",
+                    )
+
+        with deg_sub[5]:
+            diag_col1, diag_col2 = st.columns(2)
+            with diag_col1:
+                if "stat" in deg_filtered.columns:
+                    st.plotly_chart(
+                        lfc_vs_stat_scatter(deg_filtered, "log2fc", "stat",
+                                            "padj", sig_threshold),
+                        width="stretch",
+                    )
+                else:
+                    st.info("Wald statistic column not mapped.")
+            with diag_col2:
+                if "baseMean" in deg_filtered.columns and "lfcSE" in deg_filtered.columns:
+                    st.plotly_chart(
+                        lfc_se_scatter(deg_filtered, "baseMean", "lfcSE"),
+                        width="stretch",
+                    )
+                else:
+                    st.info("Need both baseMean and lfcSE for this plot.")
+
+        # ---- Filtered data table ----
+        st.markdown(f"**{len(deg_filtered):,}** genes after filtering")
+        st.dataframe(
+            deg_filtered.sort_values("padj", ascending=True)
+            if "padj" in deg_filtered.columns
+            else deg_filtered,
+            width="stretch",
+            height=400,
+        )
+        csv_buf_deg = io.StringIO()
+        deg_filtered.to_csv(csv_buf_deg, index=False)
+        st.download_button(
+            "Download filtered DEG table",
+            csv_buf_deg.getvalue(),
+            file_name="filtered_deg_table.csv",
+            mime="text/csv",
+            key="dl_filtered_deg",
+        )
+    else:
+        st.info("No DEG table loaded. Upload one in the sidebar or run the analysis first.")
 
 # ---- Tab: GeneWalk Comparison ----
 if "GeneWalk Comparison" in available_tabs:
