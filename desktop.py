@@ -1,7 +1,8 @@
 """GeneWalk Analysis Pipeline -- Desktop App.
 
-Full desktop application that can both run GeneWalk analyses and visualize
-results. This is the entry point bundled by PyInstaller into an executable.
+Full desktop application that can run GeneWalk analyses, GSEA/ORA comparison
+pipelines, and visualize results. This is the entry point bundled by
+PyInstaller into an executable.
 
 Launch with:  streamlit run desktop.py
 """
@@ -46,47 +47,242 @@ st.set_page_config(
 )
 st.markdown(get_custom_css(), unsafe_allow_html=True)
 
-# ---------------------------------------------------------------------------
-# App mode selector — choose between GeneWalk-only and Comparison Pipeline
-# ---------------------------------------------------------------------------
-if "app_mode" not in st.session_state:
-    st.session_state.app_mode = "genewalk"
-
-with st.sidebar:
-    st.markdown("## Analysis Mode")
-    mode = st.radio(
-        "Choose analysis pipeline",
-        ["GeneWalk Analysis", "GSEA + GeneWalk Comparison"],
-        index=0 if st.session_state.app_mode == "genewalk" else 1,
-        help="**GeneWalk Analysis** — Run GeneWalk on a gene list and explore "
-             "results interactively.\n\n"
-             "**GSEA + GeneWalk Comparison** — Upload a DESeq2/edgeR/limma "
-             "DEG table, run GeneWalk + GSEA + ORA together, and compare "
-             "results across methods with integrated DEG Explorer.",
-        key="mode_radio",
-    )
-    st.session_state.app_mode = "genewalk" if mode == "GeneWalk Analysis" else "comparison"
-    st.markdown("---")
-
-# ---------------------------------------------------------------------------
-# If comparison mode is selected, hand off to the comparison pipeline
-# ---------------------------------------------------------------------------
-if st.session_state.app_mode == "comparison":
-    from comparison_app import run_comparison_ui
-    run_comparison_ui()
-    st.stop()
+# Extra CSS for the pipeline chooser cards
+st.markdown("""
+<style>
+.pipeline-chooser {
+    display: flex;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+.pipeline-card {
+    flex: 1;
+    background: var(--gw-card-bg, #fff);
+    border: 2px solid var(--gw-card-border, #e2e8f0);
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.pipeline-card:hover {
+    border-color: #2a6cb6;
+    box-shadow: 0 8px 24px rgba(42,108,182,0.15);
+    transform: translateY(-3px);
+}
+.pipeline-card .pipeline-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+.pipeline-card h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--gw-text-primary, #1e293b);
+    margin: 0 0 0.75rem 0;
+}
+.pipeline-card p {
+    font-size: 0.95rem;
+    color: var(--gw-text-secondary, #64748b);
+    line-height: 1.6;
+    margin: 0 0 0.5rem 0;
+}
+.pipeline-card .pipeline-features {
+    font-size: 0.85rem;
+    color: var(--gw-text-secondary, #64748b);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gw-card-border, #e2e8f0);
+}
+.pipeline-card .pipeline-features li {
+    margin-bottom: 0.3rem;
+}
+.pipeline-active {
+    border-color: #2a6cb6;
+    background: linear-gradient(135deg, rgba(42,108,182,0.04) 0%, rgba(74,144,217,0.08) 100%);
+}
+.mode-indicator {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.mode-gw { background: #dbeafe; color: #1e40af; }
+.mode-comp { background: #d1fae5; color: #065f46; }
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------
 # Session state
 # ---------------------------------------------------------------------------
+if "app_mode" not in st.session_state:
+    st.session_state.app_mode = None  # None = show chooser, "genewalk" or "comparison"
 if "results_df" not in st.session_state:
     st.session_state.results_df = None
 if "run_log" not in st.session_state:
     st.session_state.run_log = None
 
 # ---------------------------------------------------------------------------
-# Sidebar
+# Sidebar — always show the mode switcher at the top
 # ---------------------------------------------------------------------------
+with st.sidebar:
+    if st.session_state.app_mode is not None:
+        current_label = (
+            "GeneWalk Analysis" if st.session_state.app_mode == "genewalk"
+            else "GSEA + GeneWalk Comparison"
+        )
+        st.markdown(
+            f'<div class="mode-indicator '
+            f'{"mode-gw" if st.session_state.app_mode == "genewalk" else "mode-comp"}">'
+            f'{current_label}</div>',
+            unsafe_allow_html=True,
+        )
+        if st.button("Switch Pipeline", use_container_width=True):
+            st.session_state.app_mode = None
+            st.rerun()
+        st.markdown("---")
+
+# ---------------------------------------------------------------------------
+# Pipeline chooser — shown when no mode is selected
+# ---------------------------------------------------------------------------
+if st.session_state.app_mode is None:
+    # Hero
+    st.markdown("""
+    <div class="hero-banner">
+        <div class="hero-badge">Desktop App</div>
+        <h1>GeneWalk Analysis Pipeline</h1>
+        <p>Context-specific functional analysis and pathway enrichment
+        for your gene lists. Choose a pipeline below to get started.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("")
+    st.markdown("### Choose Your Analysis Pipeline")
+
+    col_gw, col_comp = st.columns(2, gap="large")
+
+    with col_gw:
+        st.markdown("""
+        <div class="pipeline-card">
+            <div class="pipeline-icon">&#x1F9EC;</div>
+            <h3>GeneWalk Analysis</h3>
+            <p>Upload a plain gene list and run GeneWalk to identify which
+            GO functions are contextually relevant to your genes.</p>
+            <div class="pipeline-features">
+            <strong>Best for:</strong>
+            <ul>
+            <li>Single gene list (e.g. CRISPR hits, GWAS genes)</li>
+            <li>Context-specific functional annotation</li>
+            <li>Gene&#8211;GO network exploration</li>
+            </ul>
+            <strong>Input:</strong> Gene list (.txt, one per line)
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button(
+            "Start GeneWalk Analysis",
+            type="primary",
+            use_container_width=True,
+            key="choose_gw",
+        ):
+            st.session_state.app_mode = "genewalk"
+            st.rerun()
+
+    with col_comp:
+        st.markdown("""
+        <div class="pipeline-card">
+            <div class="pipeline-icon">&#x1F4CA;</div>
+            <h3>GSEA + GeneWalk Comparison</h3>
+            <p>Upload a DESeq2/edgeR/limma DEG table and run GeneWalk, GSEA,
+            and ORA together with a unified comparison dashboard.</p>
+            <div class="pipeline-features">
+            <strong>Best for:</strong>
+            <ul>
+            <li>Differential expression results (DESeq2, edgeR, limma)</li>
+            <li>Comparing up vs down regulated genes</li>
+            <li>Cross-method concordance (GeneWalk + GSEA + ORA)</li>
+            <li>Volcano plots, MA plots, DEG filtering</li>
+            </ul>
+            <strong>Input:</strong> DEG table (.csv with gene, log2FC, padj)
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button(
+            "Start Comparison Pipeline",
+            type="primary",
+            use_container_width=True,
+            key="choose_comp",
+        ):
+            st.session_state.app_mode = "comparison"
+            st.rerun()
+
+    st.markdown("")
+    with st.expander("What's the difference?", expanded=False):
+        st.markdown("""
+<div class="guide-section">
+<table class="param-table">
+<tr>
+    <th>Feature</th>
+    <th>GeneWalk Analysis</th>
+    <th>GSEA + GeneWalk Comparison</th>
+</tr>
+<tr>
+    <td><strong>Input</strong></td>
+    <td>Plain gene list (.txt)</td>
+    <td>DEG table with fold-change & p-values</td>
+</tr>
+<tr>
+    <td><strong>Analyses</strong></td>
+    <td>GeneWalk only</td>
+    <td>GeneWalk (up & down) + GSEA prerank + ORA</td>
+</tr>
+<tr>
+    <td><strong>Fold-change</strong></td>
+    <td>Not used</td>
+    <td>Used for GSEA ranking & up/down splitting</td>
+</tr>
+<tr>
+    <td><strong>DEG Exploration</strong></td>
+    <td>No</td>
+    <td>Yes &mdash; volcano, MA plot, filtering, diagnostics</td>
+</tr>
+<tr>
+    <td><strong>Cross-method</strong></td>
+    <td>No</td>
+    <td>Yes &mdash; concordance across GeneWalk, GSEA, ORA</td>
+</tr>
+<tr>
+    <td><strong>Use case</strong></td>
+    <td>Quick gene list from any source</td>
+    <td>Full differential expression analysis pipeline</td>
+</tr>
+</table>
+</div>
+        """, unsafe_allow_html=True)
+
+    # Footer
+    st.markdown(
+        '<div class="app-footer">Built with '
+        '<a href="https://streamlit.io">Streamlit</a> &middot; '
+        'Analysis by <a href="https://github.com/churchmanlab/genewalk">'
+        "GeneWalk</a> + "
+        '<a href="https://github.com/zqfang/GSEApy">GSEApy</a> &middot; '
+        "Ietswaart et al., <em>Genome Biology</em> 2021</div>",
+        unsafe_allow_html=True,
+    )
+    st.stop()
+
+# =========================================================================
+# COMPARISON PIPELINE
+# =========================================================================
+if st.session_state.app_mode == "comparison":
+    from comparison_app import run_comparison_ui
+    run_comparison_ui()
+    st.stop()
+
+# =========================================================================
+# GENEWALK ANALYSIS PIPELINE
+# =========================================================================
 with st.sidebar:
     st.markdown("## GeneWalk Analysis")
     st.caption("Upload genes, configure, and explore results.")
@@ -309,7 +505,7 @@ if run_clicked and genes:
 # Hero banner
 st.markdown("""
 <div class="hero-banner">
-    <div class="hero-badge">Desktop App</div>
+    <div class="hero-badge">GeneWalk Analysis</div>
     <h1>GeneWalk Analysis Pipeline</h1>
     <p>Identify relevant gene functions for your biological context using network
     representation learning.
