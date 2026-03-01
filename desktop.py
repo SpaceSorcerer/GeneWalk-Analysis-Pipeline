@@ -31,6 +31,9 @@ SAMPLE_GENES_PATH = Path(__file__).parent / "sample_data" / "sample_genes.txt"
 SAMPLE_RESULTS_PATH = (
     Path(__file__).parent / "sample_data" / "sample_genewalk_results.csv"
 )
+SAMPLE_DEG_PATH = (
+    Path(__file__).parent / "sample_data" / "sample_deg_table.csv"
+)
 
 # ---------------------------------------------------------------------------
 # Page config & custom styles
@@ -42,6 +45,36 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 st.markdown(get_custom_css(), unsafe_allow_html=True)
+
+# ---------------------------------------------------------------------------
+# App mode selector — choose between GeneWalk-only and Comparison Pipeline
+# ---------------------------------------------------------------------------
+if "app_mode" not in st.session_state:
+    st.session_state.app_mode = "genewalk"
+
+with st.sidebar:
+    st.markdown("## Analysis Mode")
+    mode = st.radio(
+        "Choose analysis pipeline",
+        ["GeneWalk Analysis", "GSEA + GeneWalk Comparison"],
+        index=0 if st.session_state.app_mode == "genewalk" else 1,
+        help="**GeneWalk Analysis** — Run GeneWalk on a gene list and explore "
+             "results interactively.\n\n"
+             "**GSEA + GeneWalk Comparison** — Upload a DESeq2/edgeR/limma "
+             "DEG table, run GeneWalk + GSEA + ORA together, and compare "
+             "results across methods with integrated DEG Explorer.",
+        key="mode_radio",
+    )
+    st.session_state.app_mode = "genewalk" if mode == "GeneWalk Analysis" else "comparison"
+    st.markdown("---")
+
+# ---------------------------------------------------------------------------
+# If comparison mode is selected, hand off to the comparison pipeline
+# ---------------------------------------------------------------------------
+if st.session_state.app_mode == "comparison":
+    from comparison_app import run_comparison_ui
+    run_comparison_ui()
+    st.stop()
 
 # ---------------------------------------------------------------------------
 # Session state

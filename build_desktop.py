@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 LAUNCHER = ROOT / "desktop_launcher.py"
 DESKTOP_APP = ROOT / "desktop.py"
+COMPARISON_APP = ROOT / "comparison_app.py"
 GENEWALK_APP_PKG = ROOT / "genewalk_app"
 SAMPLE_DATA = ROOT / "sample_data"
 STREAMLIT_CONFIG = ROOT / ".streamlit"
@@ -54,6 +55,7 @@ def build():
 
         # ---- Data files ----
         "--add-data", f"{DESKTOP_APP}{os.pathsep}.",
+        "--add-data", f"{COMPARISON_APP}{os.pathsep}.",
         "--add-data", f"{GENEWALK_APP_PKG}{os.pathsep}genewalk_app",
         "--add-data", f"{SAMPLE_DATA}{os.pathsep}sample_data",
         "--add-data", f"{STREAMLIT_CONFIG}{os.pathsep}.streamlit",
@@ -68,6 +70,7 @@ def build():
         "--collect-all", "pydeck",
         "--collect-all", "genewalk",
         "--collect-all", "matplotlib",
+        "--collect-all", "gseapy",
 
         # ---- Hidden imports ----
         "--hidden-import", "streamlit",
@@ -97,6 +100,14 @@ def build():
         "--hidden-import", "matplotlib.backends.backend_agg",
         "--hidden-import", "matplotlib.backends.backend_svg",
         "--hidden-import", "genewalk_app._gw_wrapper",
+        # Comparison pipeline modules
+        "--hidden-import", "genewalk_app.comparison",
+        "--hidden-import", "genewalk_app.comparison_viz",
+        "--hidden-import", "genewalk_app.deg_visualizations",
+        "--hidden-import", "genewalk_app.gsea_runner",
+        "--hidden-import", "gseapy",
+        "--hidden-import", "gseapy.enrichr",
+        "--hidden-import", "gseapy.gsea",
     ]
 
     print(f"Building {APP_NAME}...")
