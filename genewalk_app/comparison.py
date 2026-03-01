@@ -69,6 +69,13 @@ def parse_deg_table(
 
     Returns a DataFrame with columns: gene, log2fc, padj (plus any
     additional columns from the original table).
+
+    Genes with NA padj are **preserved** because:
+    - DESeq2 sets padj=NA for low-count genes, outliers, and genes
+      removed by independent filtering.
+    - GSEA prerank needs the full ranked list (all genes with a log2FC),
+      not just genes with valid adjusted p-values.
+    - Only genes missing a gene name or log2FC are dropped.
     """
     missing = [
         name for name, col in [("gene", gene_col), ("log2fc", log2fc_col), ("padj", padj_col)]
@@ -85,7 +92,9 @@ def parse_deg_table(
     })
     out["log2fc"] = pd.to_numeric(out["log2fc"], errors="coerce")
     out["padj"] = pd.to_numeric(out["padj"], errors="coerce")
-    out = out.dropna(subset=["gene", "log2fc", "padj"])
+    # Only drop rows missing gene name or log2FC — keep NA padj rows
+    # so GSEA prerank gets the full ranked list.
+    out = out.dropna(subset=["gene", "log2fc"])
     out["gene"] = out["gene"].astype(str).str.strip()
     out = out[out["gene"] != ""]
     return out.reset_index(drop=True)
@@ -111,7 +120,9 @@ def split_deg_lists(
     -------
     (up_genes, down_genes) : tuple[list[str], list[str]]
     """
-    sig = deg[deg["padj"] <= padj_threshold]
+    # NA padj values are treated as not significant (they represent
+    # genes DESeq2 could not test, e.g. low counts or outliers).
+    sig = deg[deg["padj"].notna() & (deg["padj"] <= padj_threshold)]
     up = sig[sig["log2fc"] >= fc_threshold]["gene"].unique().tolist()
     down = sig[sig["log2fc"] <= -fc_threshold]["gene"].unique().tolist()
     return up, down
@@ -121,16 +132,33 @@ def make_ranked_list(deg: pd.DataFrame) -> pd.DataFrame:
     """Create a ranked gene list for GSEA prerank from a DEG table.
 
     Returns a two-column DataFrame (gene, score) sorted by score descending.
-    Genes are deduplicated by keeping the entry with the largest absolute score.
+
+    Deduplication strategy: when a gene appears multiple times, keep the
+    entry with the smallest padj (most significant).  If padj is not
+    available, fall back to keeping the entry with the largest |log2FC|.
+    This avoids inflating ranking metrics with outlier fold-change values.
     """
-    rnk = deg[["gene", "log2fc"]].copy()
-    rnk = rnk.dropna()
-    # Deduplicate: keep the row with the largest absolute log2fc per gene
-    rnk["abs_score"] = rnk["log2fc"].abs()
-    rnk = rnk.sort_values("abs_score", ascending=False).drop_duplicates(
-        subset="gene", keep="first"
-    )
-    rnk = rnk.drop(columns="abs_score").sort_values("log2fc", ascending=False)
+    cols = ["gene", "log2fc"]
+    has_padj = "padj" in deg.columns
+    if has_padj:
+        cols.append("padj")
+
+    rnk = deg[cols].copy()
+    rnk = rnk.dropna(subset=["gene", "log2fc"])
+
+    if has_padj:
+        # Prefer the most statistically significant entry per gene
+        rnk = rnk.sort_values("padj", ascending=True, na_position="last")
+        rnk = rnk.drop_duplicates(subset="gene", keep="first")
+        rnk = rnk.drop(columns="padj")
+    else:
+        rnk["abs_score"] = rnk["log2fc"].abs()
+        rnk = rnk.sort_values("abs_score", ascending=False).drop_duplicates(
+            subset="gene", keep="first"
+        )
+        rnk = rnk.drop(columns="abs_score")
+
+    rnk = rnk.sort_values("log2fc", ascending=False)
     return rnk.reset_index(drop=True)
 
 
@@ -178,6 +206,29 @@ def shared_go_terms(
     return merged.sort_values("best_padj_up", ascending=True).reset_index(drop=True)
 
 
+def _normalize_term(term: str) -> str:
+    """Normalize a term name for fuzzy matching across databases.
+
+    Strips common prefixes (GO_, KEGG_, REACTOME_, HALLMARK_, WP_),
+    converts to lowercase, and removes underscores/hyphens for
+    comparison.
+    """
+    import re
+    t = term.lower()
+    # Strip common database prefixes
+    t = re.sub(
+        r"^(go_biological_process_|go_molecular_function_|"
+        r"go_cellular_component_|kegg_|reactome_|hallmark_|wp_|"
+        r"go:|hsa\d+_)",
+        "", t,
+    )
+    # Replace underscores, hyphens, extra spaces with single space
+    t = re.sub(r"[_\-]+", " ", t).strip()
+    # Remove parenthetical qualifiers like "(GO:0001234)"
+    t = re.sub(r"\s*\(go:\d+\)\s*", "", t)
+    return t
+
+
 def cross_method_concordance(
     gw_results: pd.DataFrame,
     gsea_results: pd.DataFrame,
@@ -189,49 +240,64 @@ def cross_method_concordance(
 ) -> pd.DataFrame:
     """Build a concordance table of terms found by multiple methods.
 
-    Matches terms by substring overlap since GeneWalk uses GO term names
-    while GSEA/ORA use pathway database names.
+    Uses normalized term matching: strips database prefixes, lowercases,
+    and compares cleaned names so that e.g. GeneWalk's
+    "cell proliferation" can match GSEA's
+    "GO_BIOLOGICAL_PROCESS_CELL_PROLIFERATION" or ORA's
+    "Cell Proliferation (GO:0008283)".
 
     Returns a DataFrame with columns: term, found_in (list of methods),
-    gw_padj, gsea_fdr, ora_fdr.
+    n_methods, gsea_fdr, ora_fdr.
     """
     records: list[dict] = []
 
-    # Collect significant terms from each method
-    gw_terms: set[str] = set()
+    # Collect significant terms: normalized_name -> (display_name, score)
+    gw_map: dict[str, str] = {}  # normalized -> display name
     if not gw_results.empty and "go_name" in gw_results.columns and gw_padj_col in gw_results.columns:
         gw_sig = gw_results[gw_results[gw_padj_col] <= gw_padj_threshold]
-        gw_terms = set(gw_sig["go_name"].dropna().unique())
+        for name in gw_sig["go_name"].dropna().unique():
+            gw_map[_normalize_term(name)] = name
 
-    gsea_terms: dict[str, float] = {}
+    gsea_map: dict[str, tuple[str, float]] = {}  # normalized -> (display, fdr)
     if not gsea_results.empty and "term" in gsea_results.columns and "fdr" in gsea_results.columns:
         gsea_sig = gsea_results[gsea_results["fdr"] <= gsea_fdr_threshold]
         for _, row in gsea_sig.iterrows():
-            gsea_terms[row["term"]] = row["fdr"]
+            norm = _normalize_term(row["term"])
+            if norm not in gsea_map or row["fdr"] < gsea_map[norm][1]:
+                gsea_map[norm] = (row["term"], row["fdr"])
 
-    ora_terms: dict[str, float] = {}
+    ora_map: dict[str, tuple[str, float]] = {}
     if not ora_results.empty and "term" in ora_results.columns and "fdr" in ora_results.columns:
         ora_sig = ora_results[ora_results["fdr"] <= ora_fdr_threshold]
         for _, row in ora_sig.iterrows():
-            ora_terms[row["term"]] = row["fdr"]
+            norm = _normalize_term(row["term"])
+            if norm not in ora_map or row["fdr"] < ora_map[norm][1]:
+                ora_map[norm] = (row["term"], row["fdr"])
 
-    # Combine all terms
-    all_terms = gw_terms | set(gsea_terms.keys()) | set(ora_terms.keys())
-    for term in sorted(all_terms):
+    # Match across all normalized terms
+    all_norms = set(gw_map.keys()) | set(gsea_map.keys()) | set(ora_map.keys())
+    for norm in sorted(all_norms):
         methods = []
-        if term in gw_terms:
+        display_name = norm  # fallback
+        if norm in gw_map:
             methods.append("GeneWalk")
-        if term in gsea_terms:
+            display_name = gw_map[norm]
+        if norm in gsea_map:
             methods.append("GSEA")
-        if term in ora_terms:
+            if display_name == norm:
+                display_name = gsea_map[norm][0]
+        if norm in ora_map:
             methods.append("ORA")
+            if display_name == norm:
+                display_name = ora_map[norm][0]
+
         if len(methods) >= 2:
             records.append({
-                "term": term,
+                "term": display_name,
                 "found_in": ", ".join(methods),
                 "n_methods": len(methods),
-                "gsea_fdr": gsea_terms.get(term),
-                "ora_fdr": ora_terms.get(term),
+                "gsea_fdr": gsea_map[norm][1] if norm in gsea_map else None,
+                "ora_fdr": ora_map[norm][1] if norm in ora_map else None,
             })
 
     if not records:
