@@ -263,6 +263,15 @@ def run_comparison_ui() -> None:
 
         project_name = st.text_input("Project name", value="comparison_analysis")
 
+        output_folder = st.text_input(
+            "Output folder",
+            value="",
+            help="Where to save GeneWalk and GSEA results. Leave blank to "
+                 "use the system temp directory. Examples: "
+                 "C:\\Users\\you\\genewalk_output or ~/genewalk_output",
+            placeholder="Leave blank for default (system temp)",
+        )
+
         # ---- Gene set libraries ----
         st.markdown("---")
         st.markdown('<p class="section-header">Gene Set Libraries</p>',
@@ -393,7 +402,15 @@ def run_comparison_ui() -> None:
         with st.status("Running comparison analysis...", expanded=True) as status:
             progress = st.empty()
             safe_project = _sanitize_project_name(project_name)
-            tmp = Path(tempfile.mkdtemp())
+
+            # Resolve output directory
+            base_folder: Path | None = None
+            if output_folder.strip():
+                base_folder = Path(output_folder).expanduser()
+                base_folder.mkdir(parents=True, exist_ok=True)
+                tmp = base_folder
+            else:
+                tmp = Path(tempfile.mkdtemp())
 
             # --- GeneWalk ---
             if run_gw:
@@ -419,6 +436,7 @@ def run_comparison_ui() -> None:
                         nreps_graph=nreps,
                         nreps_null=nreps,
                         alpha_fdr=1.0,
+                        base_folder=base_folder,
                         on_progress=_gw_progress,
                     )
                     csv_path = find_results_csv(result["output_dir"])
@@ -444,9 +462,11 @@ def run_comparison_ui() -> None:
                     def _gsea_progress(msg: str) -> None:
                         progress.write(msg)
 
+                    gsea_outdir = tmp / "gsea_prerank" if base_folder else None
                     gsea_res = run_gsea_prerank(
                         ranked_genes=ranked,
                         gene_sets=selected_gene_sets,
+                        outdir=gsea_outdir,
                         permutation_num=1000,
                         min_size=15,
                         max_size=500,
@@ -471,15 +491,19 @@ def run_comparison_ui() -> None:
                     def _ora_progress(msg: str, _label=label) -> None:
                         progress.write(f"ORA ({_label}): {msg}")
 
+                    ora_outdir = tmp / f"ora_{label.replace('-', '_')}" if base_folder else None
                     ora_res = run_ora(
                         gene_list=genes,
                         gene_sets=selected_gene_sets,
+                        outdir=ora_outdir,
                         on_progress=_ora_progress,
                     )
                     st.session_state[state_key] = ora_res
                     n_sig = len(ora_res[ora_res["fdr"] <= 0.05]) if "fdr" in ora_res.columns else 0
                     log_parts.append(f"ORA ({label}): {len(ora_res)} terms, {n_sig} significant (FDR <= 0.05).")
 
+            if base_folder:
+                log_parts.append(f"**Output folder:** `{tmp}`")
             st.session_state.comp_run_log = "\n\n".join(log_parts)
             st.session_state.analysis_complete = True
             status.update(label="Analysis complete!", state="complete")
