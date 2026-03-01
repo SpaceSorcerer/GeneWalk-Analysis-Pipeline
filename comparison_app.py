@@ -492,9 +492,14 @@ def run_comparison_ui() -> None:
                         progress.write(f"ORA ({_label}): {msg}")
 
                     ora_outdir = tmp / f"ora_{label.replace('-', '_')}" if base_folder else None
+                    # Use all genes in the DEG table as ORA background —
+                    # this is the correct universe of measured genes, not
+                    # the entire genome.
+                    all_measured_genes = parsed["gene"].unique().tolist()
                     ora_res = run_ora(
                         gene_list=genes,
                         gene_sets=selected_gene_sets,
+                        background=all_measured_genes,
                         outdir=ora_outdir,
                         on_progress=_ora_progress,
                     )

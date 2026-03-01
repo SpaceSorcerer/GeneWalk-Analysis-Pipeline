@@ -281,20 +281,36 @@ def deg_summary_counts(
     fc_threshold: float = 1.0,
     padj_threshold: float = 0.05,
 ) -> dict:
-    """Compute summary statistics for the DEG table."""
-    total = len(deg)
-    sig = deg[deg[padj_col] <= padj_threshold] if padj_col in deg.columns else deg
+    """Compute summary statistics for the DEG table.
 
-    up = sig[sig[log2fc_col] >= fc_threshold] if log2fc_col in sig.columns else pd.DataFrame()
-    down = sig[sig[log2fc_col] <= -fc_threshold] if log2fc_col in sig.columns else pd.DataFrame()
+    "Significant" means passing BOTH padj AND |log2FC| thresholds,
+    which matches the actual genes used for GeneWalk and ORA.
+    """
+    total = len(deg)
+    has_padj = padj_col in deg.columns
+    has_lfc = log2fc_col in deg.columns
+
+    if has_padj and has_lfc:
+        sig_padj = deg[deg[padj_col] <= padj_threshold]
+        up = sig_padj[sig_padj[log2fc_col] >= fc_threshold]
+        down = sig_padj[sig_padj[log2fc_col] <= -fc_threshold]
+        deg_count = len(up) + len(down)
+    elif has_padj:
+        up = pd.DataFrame()
+        down = pd.DataFrame()
+        deg_count = len(deg[deg[padj_col] <= padj_threshold])
+    else:
+        up = pd.DataFrame()
+        down = pd.DataFrame()
+        deg_count = 0
 
     return {
         "total_genes": total,
-        "significant": len(sig),
+        "significant": deg_count,
         "up_regulated": len(up),
         "down_regulated": len(down),
-        "not_significant": total - len(sig),
-        "pct_significant": round(100 * len(sig) / total, 1) if total > 0 else 0,
+        "not_significant": total - deg_count,
+        "pct_significant": round(100 * deg_count / total, 1) if total > 0 else 0,
     }
 
 

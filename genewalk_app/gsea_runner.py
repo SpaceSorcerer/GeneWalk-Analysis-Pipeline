@@ -154,8 +154,14 @@ def run_ora(
 
 
 def _clean_gsea_results(df: pd.DataFrame) -> pd.DataFrame:
-    """Standardize GSEA prerank result column names."""
+    """Standardize GSEA prerank result column names.
+
+    GSEApy >= 1.1 uses lowercase column names directly (term, es, nes,
+    fdr, etc.).  Older versions used Title Case (Term, ES, NES, etc.).
+    This handles both.
+    """
     rename = {
+        # Older GSEApy versions
         "Term": "term",
         "Name": "term",
         "ES": "es",
@@ -166,10 +172,17 @@ def _clean_gsea_results(df: pd.DataFrame) -> pd.DataFrame:
         "Tag %": "tag_pct",
         "Gene %": "gene_pct",
         "Lead_genes": "lead_genes",
+        # GSEApy >= 1.1 sometimes uses these
+        "NOM p-value": "pval",
+        "FDR q-value": "fdr",
+        "FWER p-value": "fwerp",
     }
-    df = df.rename(columns={k: v for k, v in rename.items() if k in df.columns})
+    # Only rename columns that exist and don't conflict with existing lowercase
+    for old, new in rename.items():
+        if old in df.columns and new not in df.columns:
+            df = df.rename(columns={old: new})
     # Ensure key numeric columns exist
-    for col in ("nes", "fdr", "pval"):
+    for col in ("nes", "es", "fdr", "pval"):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
     return df

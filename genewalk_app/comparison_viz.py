@@ -177,14 +177,20 @@ def direction_volcano(
     padj_threshold: float = 0.05,
 ) -> go.Figure:
     """Combined volcano plot with gene-GO pairs from both directions."""
-    if "sim" not in gw_up.columns or "sim" not in gw_down.columns:
-        return go.Figure().update_layout(title="Missing sim column for volcano plot")
-    if padj_col not in gw_up.columns or padj_col not in gw_down.columns:
-        return go.Figure().update_layout(title=f"Missing {padj_col} column")
+    required = {"hgnc_symbol", "go_name", "sim"}
+    for label, gw in [("up", gw_up), ("down", gw_down)]:
+        missing = required - set(gw.columns)
+        if missing:
+            return go.Figure().update_layout(
+                title=f"Missing columns in {label}-regulated GeneWalk results: {', '.join(missing)}"
+            )
+        if padj_col not in gw.columns:
+            return go.Figure().update_layout(title=f"Missing {padj_col} column in {label}-regulated results")
 
-    up = gw_up[["hgnc_symbol", "go_name", "sim", padj_col]].copy()
+    keep_cols = ["hgnc_symbol", "go_name", "sim", padj_col]
+    up = gw_up[keep_cols].copy()
     up["direction"] = "Up-regulated"
-    down = gw_down[["hgnc_symbol", "go_name", "sim", padj_col]].copy()
+    down = gw_down[keep_cols].copy()
     down["direction"] = "Down-regulated"
 
     combined = pd.concat([up, down], ignore_index=True).dropna(subset=[padj_col, "sim"])
