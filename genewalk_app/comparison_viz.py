@@ -116,8 +116,130 @@ def gsea_dot_plot(
 
 
 # ---------------------------------------------------------------------------
+# GSEA leading edge
+# ---------------------------------------------------------------------------
+
+def gsea_leading_edge_table(
+    gsea_df: pd.DataFrame,
+    fdr_threshold: float = 0.25,
+    top_n: int = 20,
+) -> pd.DataFrame:
+    """Extract a summary table of leading edge genes from GSEA results.
+
+    Returns a DataFrame with columns: term, nes, fdr, lead_genes,
+    n_lead_genes, gene_set_library.  This is the most biologically
+    actionable output from GSEA — the core genes driving each enrichment.
+    """
+    if gsea_df.empty or "nes" not in gsea_df.columns:
+        return pd.DataFrame()
+
+    df = gsea_df.copy()
+    if "fdr" in df.columns:
+        df = df[df["fdr"] <= fdr_threshold]
+    if df.empty:
+        return pd.DataFrame()
+
+    df = df.sort_values("nes", key=abs, ascending=False).head(top_n)
+
+    # Identify the lead genes column (varies by GSEApy version)
+    lead_col = None
+    for candidate in ["lead_genes", "Lead_genes", "genes", "ledge_genes"]:
+        if candidate in df.columns:
+            lead_col = candidate
+            break
+
+    cols = ["term", "nes"]
+    if "fdr" in df.columns:
+        cols.append("fdr")
+    if lead_col:
+        df["lead_genes"] = df[lead_col].astype(str)
+        df["n_lead_genes"] = df["lead_genes"].apply(
+            lambda x: len(x.split(";")) if x and x != "nan" else 0
+        )
+        cols.extend(["lead_genes", "n_lead_genes"])
+    if "gene_set_library" in df.columns:
+        cols.append("gene_set_library")
+
+    return df[[c for c in cols if c in df.columns]].reset_index(drop=True)
+
+
+# ---------------------------------------------------------------------------
 # ORA plots
 # ---------------------------------------------------------------------------
+
+def ora_dot_plot(
+    ora_df: pd.DataFrame,
+    label: str = "",
+    fdr_threshold: float = 0.05,
+    top_n: int = 25,
+) -> go.Figure:
+    """Dot plot for ORA results: sized by overlap ratio, colored by FDR.
+
+    Uses the parsed overlap_ratio and overlap_count columns from
+    _clean_ora_results for proper numeric sizing.
+    """
+    if ora_df.empty or "term" not in ora_df.columns:
+        return go.Figure().update_layout(
+            title=f"No ORA results{' (' + label + ')' if label else ''}"
+        )
+
+    df = ora_df.copy()
+    if "fdr" in df.columns:
+        df = df[df["fdr"] <= fdr_threshold]
+    if df.empty:
+        return go.Figure().update_layout(
+            title=f"No significant terms (FDR <= {fdr_threshold})"
+        )
+
+    if "combined_score" in df.columns:
+        df = df.sort_values("combined_score", ascending=False).head(top_n)
+    elif "fdr" in df.columns:
+        df = df.sort_values("fdr", ascending=True).head(top_n)
+
+    # Size by overlap count if available
+    size_col = "overlap_count" if "overlap_count" in df.columns else None
+    if size_col is None:
+        df["_dot_size"] = 10
+        size_col = "_dot_size"
+
+    if "fdr" in df.columns:
+        df["neg_log10_fdr"] = -np.log10(df["fdr"].clip(lower=1e-300))
+        color_col = "neg_log10_fdr"
+        color_label = "-log10(FDR)"
+    elif "combined_score" in df.columns:
+        color_col = "combined_score"
+        color_label = "Combined Score"
+    else:
+        df["_color"] = 1
+        color_col = "_color"
+        color_label = ""
+
+    hover_cols = [c for c in ["fdr", "overlap", "overlap_ratio", "genes"] if c in df.columns]
+
+    fig = px.scatter(
+        df,
+        x="combined_score" if "combined_score" in df.columns else "neg_log10_fdr",
+        y="term",
+        size=size_col,
+        color=color_col,
+        color_continuous_scale="Reds",
+        hover_data=hover_cols,
+        labels={
+            "combined_score": "Combined Score",
+            "neg_log10_fdr": "-log10(FDR)",
+            "term": "",
+            color_col: color_label,
+            "overlap_count": "Genes in Overlap",
+        },
+    )
+    title = f"ORA Dot Plot{' (' + label + ')' if label else ''}"
+    fig.update_layout(
+        title=title,
+        template="plotly_white",
+        height=max(450, len(df) * 22),
+    )
+    return fig
+
 
 def ora_bar_chart(
     ora_df: pd.DataFrame,

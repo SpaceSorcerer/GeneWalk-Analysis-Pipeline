@@ -34,8 +34,10 @@ from genewalk_app.comparison_viz import (
     direction_volcano,
     gene_set_summary_metrics,
     gsea_dot_plot,
+    gsea_leading_edge_table,
     nes_bar_chart,
     ora_bar_chart,
+    ora_dot_plot,
     shared_terms_bar,
 )
 from genewalk_app.deg_visualizations import (
@@ -456,6 +458,27 @@ def run_comparison_ui() -> None:
             if run_gsea:
                 progress.write("Running GSEA prerank on full ranked list...")
                 ranked = make_ranked_list(parsed)
+
+                # Diagnostic: check ranked list looks like log2FC values
+                if len(ranked) > 0 and "log2fc" in ranked.columns:
+                    scores = ranked["log2fc"]
+                    n_pos = (scores > 0).sum()
+                    n_neg = (scores < 0).sum()
+                    if n_pos == 0 or n_neg == 0:
+                        log_parts.append(
+                            "**Warning:** All ranking scores have the same sign. "
+                            "GSEA expects log2 fold-change values with both positive "
+                            "(up-regulated) and negative (down-regulated) values. "
+                            "Check that the correct column was selected."
+                        )
+                    elif scores.min() >= 0:
+                        log_parts.append(
+                            "**Warning:** No negative ranking scores detected. "
+                            "If your metric is -log10(p)*sign(FC) or similar, "
+                            "GSEA should still work, but NES direction may differ "
+                            "from log2FC-based analyses."
+                        )
+
                 if len(ranked) < 15:
                     log_parts.append("Skipped GSEA: fewer than 15 ranked genes.")
                 else:
@@ -690,8 +713,9 @@ def run_comparison_ui() -> None:
     list). GSEA uses the full ranked list with fold-change magnitudes.</li>
     <li>GeneWalk uses GO terms directly. GSEA/ORA use curated pathway
     databases (KEGG, Reactome, Hallmarks) which may group terms differently.</li>
-    <li>Term names differ across databases, so exact string matching between
-    methods will miss some overlaps.</li>
+    <li>Term names differ across databases. The concordance analysis uses
+    normalized matching (stripping prefixes and formatting), but some overlaps
+    may still be missed when databases use very different naming conventions.</li>
     </ul>
     </div>
         """, unsafe_allow_html=True)
@@ -1017,7 +1041,7 @@ def run_comparison_ui() -> None:
         with tabs[tab_idx]:
             tab_idx += 1
 
-            gsea_sub = st.tabs(["NES Bar Chart", "Dot Plot", "Full Table"])
+            gsea_sub = st.tabs(["NES Bar Chart", "Dot Plot", "Leading Edge Genes", "Full Table"])
 
             with gsea_sub[0]:
                 top_n_nes = st.slider("Top pathways", 10, 60, 30, key="nes_top")
@@ -1034,6 +1058,33 @@ def run_comparison_ui() -> None:
                 )
 
             with gsea_sub[2]:
+                st.markdown(
+                    '<div class="info-tip">Leading edge genes are the core subset '
+                    "driving each pathway's enrichment score. These are the genes "
+                    "that appear before the running enrichment score reaches its "
+                    "maximum (for up-regulated) or minimum (for down-regulated) "
+                    "peak. They represent the most biologically relevant genes "
+                    "for each pathway.</div>",
+                    unsafe_allow_html=True,
+                )
+                le_table = gsea_leading_edge_table(
+                    gsea_res, fdr_threshold=gsea_fdr_threshold, top_n=30,
+                )
+                if not le_table.empty:
+                    st.dataframe(le_table, width="stretch", height=500)
+                    csv_le = io.StringIO()
+                    le_table.to_csv(csv_le, index=False)
+                    st.download_button(
+                        "Download leading edge genes",
+                        csv_le.getvalue(),
+                        file_name="gsea_leading_edge_genes.csv",
+                        mime="text/csv",
+                        key="dl_leading_edge",
+                    )
+                else:
+                    st.info("No significant pathways at current FDR threshold.")
+
+            with gsea_sub[3]:
                 if gsea_res is not None and not gsea_res.empty:
                     display_gsea = gsea_res.copy()
                     if "fdr" in display_gsea.columns:
@@ -1050,23 +1101,55 @@ def run_comparison_ui() -> None:
 
             with ora_sub[0]:
                 if ora_up is not None and not ora_up.empty:
-                    st.plotly_chart(
-                        ora_bar_chart(ora_up, label="Up-regulated"),
-                        width="stretch",
-                    )
-                    with st.expander("Full ORA results (up)", expanded=False):
+                    ora_up_viz = st.tabs(["Bar Chart", "Dot Plot", "Data"])
+                    with ora_up_viz[0]:
+                        st.plotly_chart(
+                            ora_bar_chart(ora_up, label="Up-regulated"),
+                            width="stretch",
+                        )
+                    with ora_up_viz[1]:
+                        st.plotly_chart(
+                            ora_dot_plot(ora_up, label="Up-regulated"),
+                            width="stretch",
+                        )
+                    with ora_up_viz[2]:
                         st.dataframe(ora_up, width="stretch", height=400)
+                        csv_ora_up = io.StringIO()
+                        ora_up.to_csv(csv_ora_up, index=False)
+                        st.download_button(
+                            "Download ORA up results",
+                            csv_ora_up.getvalue(),
+                            file_name="ora_up_results.csv",
+                            mime="text/csv",
+                            key="dl_ora_up_tab",
+                        )
                 else:
                     st.info("No ORA results for up-regulated genes.")
 
             with ora_sub[1]:
                 if ora_down is not None and not ora_down.empty:
-                    st.plotly_chart(
-                        ora_bar_chart(ora_down, label="Down-regulated"),
-                        width="stretch",
-                    )
-                    with st.expander("Full ORA results (down)", expanded=False):
+                    ora_down_viz = st.tabs(["Bar Chart", "Dot Plot", "Data"])
+                    with ora_down_viz[0]:
+                        st.plotly_chart(
+                            ora_bar_chart(ora_down, label="Down-regulated"),
+                            width="stretch",
+                        )
+                    with ora_down_viz[1]:
+                        st.plotly_chart(
+                            ora_dot_plot(ora_down, label="Down-regulated"),
+                            width="stretch",
+                        )
+                    with ora_down_viz[2]:
                         st.dataframe(ora_down, width="stretch", height=400)
+                        csv_ora_down = io.StringIO()
+                        ora_down.to_csv(csv_ora_down, index=False)
+                        st.download_button(
+                            "Download ORA down results",
+                            csv_ora_down.getvalue(),
+                            file_name="ora_down_results.csv",
+                            mime="text/csv",
+                            key="dl_ora_down_tab",
+                        )
                 else:
                     st.info("No ORA results for down-regulated genes.")
 
@@ -1076,9 +1159,10 @@ def run_comparison_ui() -> None:
 
         st.markdown("""
         <div class="info-tip">Terms found by multiple methods (GeneWalk, GSEA, ORA)
-        represent the highest-confidence functional findings. Terms matched here
-        use exact name matching &mdash; some overlaps may be missed due to naming
-        differences across databases.</div>
+        represent the highest-confidence functional findings. Terms are matched
+        using normalized names (stripping database prefixes, lowercasing, and
+        removing formatting differences), so GeneWalk GO terms can match GSEA
+        pathway names even when databases use different naming conventions.</div>
         """, unsafe_allow_html=True)
 
         # Merge GW results for concordance
