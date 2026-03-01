@@ -208,17 +208,41 @@ def run_comparison_ui() -> None:
         st.markdown('<p class="section-header">Thresholds</p>',
                     unsafe_allow_html=True)
 
-        fc_threshold = st.slider(
-            "|log2FC| threshold", 0.0, 5.0, 1.0, 0.25,
+        fc_threshold = st.number_input(
+            "|log2FC| threshold",
+            min_value=0.0,
+            max_value=20.0,
+            value=1.0,
+            step=0.1,
+            format="%.2f",
             help="Genes with absolute log2FC above this are considered "
-                 "up- or down-regulated for GeneWalk and ORA.",
+                 "up- or down-regulated for GeneWalk and ORA. "
+                 "Type any value (e.g. 0.40, 0.58, 1.5).",
         )
-        sig_threshold = st.slider(
-            "Significance threshold (padj)", 0.001, 0.5, 0.05, 0.001,
-            format="%.3f",
+        sig_threshold = st.number_input(
+            "Significance threshold (padj)",
+            min_value=0.0,
+            max_value=1.0,
+            value=0.05,
+            step=0.001,
+            format="%.4f",
             help="Adjusted p-value cutoff for selecting differentially "
-                 "expressed genes.",
+                 "expressed genes. Type any value (e.g. 0.01, 0.05, 0.1).",
         )
+
+        # baseMean threshold — only shown when the user mapped a baseMean column
+        basemean_threshold = None
+        if basemean_col_name and basemean_col_name != "(none)":
+            basemean_threshold = st.number_input(
+                "baseMean threshold (>=)",
+                min_value=0.0,
+                value=0.0,
+                step=10.0,
+                format="%.1f",
+                help="Filter out lowly-expressed genes before splitting into "
+                     "up/down lists. DESeq2 recommends baseMean >= 10–20 for "
+                     "reliable results. Set to 0 to disable.",
+            )
 
         # ---- Analysis parameters ----
         st.markdown("---")
@@ -341,14 +365,23 @@ def run_comparison_ui() -> None:
         st.session_state.deg_table = parsed
         st.session_state.deg_raw = deg_df
         st.session_state.deg_col_map = col_map
-        up_genes, down_genes = split_deg_lists(parsed, fc_threshold, sig_threshold)
+
+        # Apply baseMean pre-filter before splitting into up/down lists
+        split_input = parsed
+        if basemean_threshold and basemean_threshold > 0 and "baseMean" in parsed.columns:
+            split_input = parsed[parsed["baseMean"] >= basemean_threshold]
+
+        up_genes, down_genes = split_deg_lists(split_input, fc_threshold, sig_threshold)
         st.session_state.up_genes = up_genes
         st.session_state.down_genes = down_genes
 
         if not up_genes and not down_genes:
+            threshold_msg = f"|log2FC| >= {fc_threshold}, padj <= {sig_threshold}"
+            if basemean_threshold and basemean_threshold > 0:
+                threshold_msg += f", baseMean >= {basemean_threshold}"
             st.error(
-                f"No genes pass the thresholds (|log2FC| >= {fc_threshold}, "
-                f"padj <= {sig_threshold}). Try relaxing the cutoffs."
+                f"No genes pass the thresholds ({threshold_msg}). "
+                f"Try relaxing the cutoffs."
             )
             st.stop()
 
@@ -741,7 +774,8 @@ def run_comparison_ui() -> None:
                     min_value=0.0,
                     max_value=20.0,
                     value=0.0,
-                    step=0.25,
+                    step=0.1,
+                    format="%.2f",
                     help="Show only genes with absolute fold-change above this.",
                 )
                 deg_filtered = deg_filtered[deg_filtered["log2fc"].abs() >= lfc_abs_min]
