@@ -31,7 +31,7 @@ def volcano_plot(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold: 
         y="neg_log10_padj",
         color="significant",
         color_discrete_map={"Significant": "#D9534F", "Not significant": "#B0BEC5"},
-        hover_data=["hgnc_symbol", "go_name", padj_col, "sim"],
+        hover_data=[c for c in ["hgnc_symbol", "go_name", padj_col, "sim"] if c in plot_df.columns],
         labels={
             "sim": "Similarity Score",
             "neg_log10_padj": "-log10(Adjusted P-value)",
@@ -76,7 +76,7 @@ def gene_bar_chart(
 
     fig = px.bar(
         gene_df,
-        x="neg_log10_padj" if padj_col in df.columns else "sim",
+        x="neg_log10_padj" if padj_col in gene_df.columns else "sim",
         y="go_name",
         color=color_col,
         orientation="h",
@@ -129,6 +129,9 @@ def gene_similarity_heatmap(
     max_terms: int = 30,
 ) -> go.Figure:
     """Heatmap of similarity scores: genes vs GO terms."""
+    if "hgnc_symbol" not in df.columns or "go_name" not in df.columns or "sim" not in df.columns:
+        return go.Figure().update_layout(title="Missing required columns for heatmap")
+
     sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
 
     if genes:
@@ -227,7 +230,7 @@ def gene_go_network(
 
     # Limit edges for readability
     if len(sig) > max_edges:
-        sig = sig.sort_values(padj_col, ascending=True).head(max_edges)
+        sig = sig.sort_values(padj_col, ascending=True).head(max_edges) if padj_col in sig.columns else sig.head(max_edges)
 
     G = nx.Graph()
 
