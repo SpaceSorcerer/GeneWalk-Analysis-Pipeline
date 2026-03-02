@@ -308,8 +308,10 @@ def gene_splicing_detail(
                 showlegend=False,
                 hoverinfo="text",
                 text=[
-                    f"Cond 1: PSI={row.get('psi_1', 'NA'):.2f}",
-                    f"Cond 2: PSI={row.get('psi_2', 'NA'):.2f}",
+                    f"Cond 1: PSI={row.get('psi_1', float('nan')):.2f}"
+                    if pd.notna(row.get("psi_1")) else "Cond 1: PSI=N/A",
+                    f"Cond 2: PSI={row.get('psi_2', float('nan')):.2f}"
+                    if pd.notna(row.get("psi_2")) else "Cond 2: PSI=N/A",
                 ],
             ))
 

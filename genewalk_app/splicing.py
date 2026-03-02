@@ -356,7 +356,7 @@ def splicing_summary(df: pd.DataFrame) -> dict:
         "total_events": total,
         "unique_genes": df["gene"].nunique(),
         "event_types": event_counts,
-        "mean_abs_dpsi": float(df["dpsi"].abs().mean()) if "dpsi" in df.columns else 0,
+        "mean_abs_dpsi": float(df["dpsi"].abs().mean()) if "dpsi" in df.columns and df["dpsi"].notna().any() else 0,
     }
 
 
