@@ -126,7 +126,8 @@ def run_comparison_ui() -> None:
                 "Upload DEG CSV/TSV",
                 type=["csv", "tsv", "txt"],
                 help="CSV or TSV with columns for gene name, log2 fold-change, "
-                     "and adjusted p-value (from DESeq2, edgeR, limma, etc.).",
+                     "and adjusted p-value (from DESeq2, edgeR, limma, etc.). "
+                     "R-exported CSVs (write.csv) are auto-detected.",
             )
             if uploaded:
                 try:
@@ -136,6 +137,27 @@ def run_comparison_ui() -> None:
                 sep = "\t" if uploaded.name.endswith((".tsv", ".txt")) else ","
                 try:
                     deg_df = pd.read_csv(io.StringIO(content), sep=sep)
+                    # Handle R-exported CSVs: if first column is unnamed
+                    # (Unnamed: 0) and contains string gene names, rename it
+                    first_col = deg_df.columns[0]
+                    if (
+                        first_col.startswith("Unnamed")
+                        or first_col.strip() == ""
+                        or first_col == "X"
+                        or first_col == "...1"
+                    ):
+                        # Check that the column contains string values
+                        # (gene names), not numbers
+                        sample = deg_df[first_col].dropna().head(20)
+                        numeric_count = pd.to_numeric(
+                            sample, errors="coerce"
+                        ).notna().sum()
+                        if numeric_count < len(sample) * 0.5:
+                            deg_df = deg_df.rename(columns={first_col: "gene"})
+                            st.info(
+                                f"Detected R-exported CSV format. "
+                                f"Renamed column '{first_col}' to 'gene'."
+                            )
                 except Exception as exc:
                     st.error(f"Could not parse file: {exc}")
         else:
