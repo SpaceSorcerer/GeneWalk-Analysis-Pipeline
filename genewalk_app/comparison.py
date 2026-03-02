@@ -132,34 +132,76 @@ def make_ranked_list(deg: pd.DataFrame) -> pd.DataFrame:
     """Create a ranked gene list for GSEA prerank from a DEG table.
 
     Returns a two-column DataFrame (gene, score) sorted by score descending.
+    The second column is always named ``score``.
 
-    Deduplication strategy: when a gene appears multiple times, keep the
-    entry with the smallest padj (most significant).  If padj is not
-    available, fall back to keeping the entry with the largest |log2FC|.
-    This avoids inflating ranking metrics with outlier fold-change values.
+    Ranking metric priority (best → fallback):
+    1. **Wald statistic** (``stat`` column) — combines effect size and
+       precision; produces the fewest ties.  Recommended by DESeq2 authors.
+    2. **Signed p-value**: ``-log10(pvalue) * sign(log2FC)`` — still
+       encodes direction and significance but requires a raw p-value column.
+    3. **log2FC** — last resort; may produce many tied values in large
+       datasets, which degrades GSEA resolution.
+
+    Deduplication: when a gene appears multiple times, keep the entry with
+    the smallest padj (most significant).  If padj is unavailable, keep the
+    entry with the largest absolute ranking score.
     """
-    cols = ["gene", "log2fc"]
-    has_padj = "padj" in deg.columns
-    if has_padj:
-        cols.append("padj")
+    import numpy as np
 
-    rnk = deg[cols].copy()
+    # --- Determine the best available ranking metric ---
+    has_stat = "stat" in deg.columns and deg["stat"].notna().any()
+    has_pvalue = "pvalue" in deg.columns and deg["pvalue"].notna().any()
+    has_padj = "padj" in deg.columns
+
+    if has_stat:
+        metric_col = "stat"
+        metric_used = "stat"
+    elif has_pvalue:
+        metric_col = "_signed_p"
+        metric_used = "signed_pvalue"
+    else:
+        metric_col = "log2fc"
+        metric_used = "log2fc"
+
+    # Build working copy with needed columns
+    keep_cols = ["gene", "log2fc"]
+    if has_stat:
+        keep_cols.append("stat")
+    if has_pvalue and not has_stat:
+        keep_cols.append("pvalue")
+    if has_padj:
+        keep_cols.append("padj")
+    keep_cols = [c for c in keep_cols if c in deg.columns]
+
+    rnk = deg[keep_cols].copy()
     rnk = rnk.dropna(subset=["gene", "log2fc"])
 
+    # Compute signed p-value metric if needed
+    if metric_col == "_signed_p":
+        rnk["_signed_p"] = (
+            -np.log10(rnk["pvalue"].clip(lower=1e-300))
+            * np.sign(rnk["log2fc"])
+        )
+
+    # --- Deduplicate genes ---
     if has_padj:
-        # Prefer the most statistically significant entry per gene
         rnk = rnk.sort_values("padj", ascending=True, na_position="last")
         rnk = rnk.drop_duplicates(subset="gene", keep="first")
-        rnk = rnk.drop(columns="padj")
     else:
-        rnk["abs_score"] = rnk["log2fc"].abs()
-        rnk = rnk.sort_values("abs_score", ascending=False).drop_duplicates(
+        rnk["_abs"] = rnk[metric_col].abs()
+        rnk = rnk.sort_values("_abs", ascending=False).drop_duplicates(
             subset="gene", keep="first"
         )
-        rnk = rnk.drop(columns="abs_score")
+        rnk.drop(columns="_abs", inplace=True)
 
-    rnk = rnk.sort_values("log2fc", ascending=False)
-    return rnk.reset_index(drop=True)
+    # --- Build final two-column output ---
+    out = pd.DataFrame()
+    out["gene"] = rnk["gene"].values
+    out["score"] = pd.to_numeric(rnk[metric_col], errors="coerce").values
+    out = out.dropna(subset=["score"])
+    out = out.sort_values("score", ascending=False).reset_index(drop=True)
+    out.attrs["ranking_metric"] = metric_used
+    return out
 
 
 def shared_go_terms(

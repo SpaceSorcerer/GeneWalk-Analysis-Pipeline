@@ -284,20 +284,21 @@ upload all five event types.</li>
         st.plotly_chart(
             dpsi_volcano(data, dpsi_threshold=dpsi_threshold, fdr_threshold=fdr_threshold),
             width="stretch",
+            key="spl_volcano",
         )
 
     # ---- Event Types ----
     with tabs[1]:
         evt_col1, evt_col2 = st.columns(2)
         with evt_col1:
-            st.plotly_chart(event_type_summary(filtered), width="stretch")
+            st.plotly_chart(event_type_summary(filtered), width="stretch", key="spl_evt_bar")
         with evt_col2:
-            st.plotly_chart(event_type_pie(filtered), width="stretch")
+            st.plotly_chart(event_type_pie(filtered), width="stretch", key="spl_evt_pie")
 
         st.markdown("**All events (before filtering):**")
         all_col1, all_col2 = st.columns(2)
         with all_col1:
-            st.plotly_chart(event_type_summary(data), width="stretch")
+            st.plotly_chart(event_type_summary(data), width="stretch", key="spl_evt_bar_all")
 
     # ---- Top Events ----
     with tabs[2]:
@@ -309,17 +310,18 @@ upload all five event types.</li>
         st.plotly_chart(
             top_splicing_events_bar(filtered, top_n=top_n_spl, sort_by=sort_metric),
             width="stretch",
+            key="spl_top_bar",
         )
 
     # ---- Distributions ----
     with tabs[3]:
         dist_col1, dist_col2 = st.columns(2)
         with dist_col1:
-            st.plotly_chart(psi_distribution(data), width="stretch")
+            st.plotly_chart(psi_distribution(data), width="stretch", key="spl_psi_dist")
         with dist_col2:
-            st.plotly_chart(dpsi_distribution(data), width="stretch")
+            st.plotly_chart(dpsi_distribution(data), width="stretch", key="spl_dpsi_dist")
 
-        st.plotly_chart(genes_by_event_count(filtered, top_n=30), width="stretch")
+        st.plotly_chart(genes_by_event_count(filtered, top_n=30), width="stretch", key="spl_gene_count")
 
     # ---- Per-Gene ----
     with tabs[4]:
@@ -336,6 +338,7 @@ upload all five event types.</li>
                 st.plotly_chart(
                     gene_splicing_detail(data, selected_gene),
                     width="stretch",
+                    key="spl_gene_detail",
                 )
                 st.dataframe(gene_events, width="stretch", height=300)
         else:

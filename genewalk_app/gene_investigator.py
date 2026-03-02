@@ -322,6 +322,7 @@ def render_gene_investigator(
             st.plotly_chart(
                 _mini_volcano(deg, gene, fc_threshold, padj_threshold),
                 width="stretch",
+                key=f"inv_volcano_{gene}",
             )
 
     # ---- GeneWalk Panel ----
@@ -387,7 +388,8 @@ def render_gene_investigator(
 
         # Show per-gene splicing detail plot
         from genewalk_app.splicing_viz import gene_splicing_detail
-        st.plotly_chart(gene_splicing_detail(splice_ev, gene), width="stretch")
+        st.plotly_chart(gene_splicing_detail(splice_ev, gene), width="stretch",
+                        key=f"inv_splicing_{gene}")
 
         display_spl_cols = [c for c in ["event_id", "event_type", "dpsi", "psi_1", "psi_2", "fdr", "coord"]
                            if c in splice_ev.columns]
