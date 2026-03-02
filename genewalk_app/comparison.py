@@ -11,12 +11,18 @@ def detect_deg_columns(df: pd.DataFrame) -> dict[str, str | None]:
     Returns a dict with keys 'gene', 'log2fc', 'padj', 'basemean',
     'lfcse', 'stat', 'pvalue' mapped to the best matching column name,
     or *None* if no match is found.
+
+    Handles R-exported DESeq2 CSVs where gene names appear in a column
+    named ``Unnamed: 0``, ``X``, ``...1``, or an empty string (from R's
+    ``write.csv()`` using row names).
     """
-    cols = {c.lower(): c for c in df.columns}
+    cols = {c.lower().strip(): c for c in df.columns}
 
     gene_candidates = [
         "gene", "gene_symbol", "hgnc_symbol", "symbol", "gene_name",
         "geneid", "gene_id", "name", "external_gene_name",
+        # R-exported DESeq2 row-name columns
+        "unnamed: 0", "x", "...1", "",
     ]
     log2fc_candidates = [
         "log2foldchange", "log2fc", "logfc", "log2_fold_change",
@@ -48,7 +54,7 @@ def detect_deg_columns(df: pd.DataFrame) -> dict[str, str | None]:
                 return cols[c]
         return None
 
-    return {
+    result = {
         "gene": _find(gene_candidates),
         "log2fc": _find(log2fc_candidates),
         "padj": _find(padj_candidates),
@@ -57,6 +63,23 @@ def detect_deg_columns(df: pd.DataFrame) -> dict[str, str | None]:
         "stat": _find(stat_candidates),
         "pvalue": _find(pvalue_candidates),
     }
+
+    # Heuristic fallback: if no gene column found, look for the first
+    # column whose values are non-numeric strings (gene symbols).
+    if result["gene"] is None:
+        for orig_col in df.columns:
+            series = df[orig_col]
+            if series.dtype == object:
+                # Check that most values look like gene names (strings),
+                # not numeric strings
+                sample = series.dropna().head(20)
+                if len(sample) > 0:
+                    numeric_count = pd.to_numeric(sample, errors="coerce").notna().sum()
+                    if numeric_count < len(sample) * 0.5:
+                        result["gene"] = orig_col
+                        break
+
+    return result
 
 
 def parse_deg_table(

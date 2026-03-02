@@ -126,7 +126,8 @@ def run_comparison_ui() -> None:
                 "Upload DEG CSV/TSV",
                 type=["csv", "tsv", "txt"],
                 help="CSV or TSV with columns for gene name, log2 fold-change, "
-                     "and adjusted p-value (from DESeq2, edgeR, limma, etc.).",
+                     "and adjusted p-value (from DESeq2, edgeR, limma, etc.). "
+                     "R-exported CSVs (write.csv) are auto-detected.",
             )
             if uploaded:
                 try:
@@ -136,6 +137,27 @@ def run_comparison_ui() -> None:
                 sep = "\t" if uploaded.name.endswith((".tsv", ".txt")) else ","
                 try:
                     deg_df = pd.read_csv(io.StringIO(content), sep=sep)
+                    # Handle R-exported CSVs: if first column is unnamed
+                    # (Unnamed: 0) and contains string gene names, rename it
+                    first_col = deg_df.columns[0]
+                    if (
+                        first_col.startswith("Unnamed")
+                        or first_col.strip() == ""
+                        or first_col == "X"
+                        or first_col == "...1"
+                    ):
+                        # Check that the column contains string values
+                        # (gene names), not numbers
+                        sample = deg_df[first_col].dropna().head(20)
+                        numeric_count = pd.to_numeric(
+                            sample, errors="coerce"
+                        ).notna().sum()
+                        if numeric_count < len(sample) * 0.5:
+                            deg_df = deg_df.rename(columns={first_col: "gene"})
+                            st.info(
+                                f"Detected R-exported CSV format. "
+                                f"Renamed column '{first_col}' to 'gene'."
+                            )
                 except Exception as exc:
                     st.error(f"Could not parse file: {exc}")
         else:
@@ -430,12 +452,14 @@ def run_comparison_ui() -> None:
         st.session_state.deg_raw = deg_df
         st.session_state.deg_col_map = col_map
 
-        # Apply baseMean pre-filter before splitting into up/down lists
-        split_input = parsed
+        # Apply baseMean pre-filter to remove unreliable low-count genes.
+        # This filter applies to ALL analyses (GeneWalk, GSEA, ORA) so
+        # that all methods analyze the same quality-filtered gene universe.
+        filtered_deg = parsed
         if basemean_threshold and basemean_threshold > 0 and "baseMean" in parsed.columns:
-            split_input = parsed[parsed["baseMean"] >= basemean_threshold]
+            filtered_deg = parsed[parsed["baseMean"] >= basemean_threshold]
 
-        up_genes, down_genes = split_deg_lists(split_input, fc_threshold, sig_threshold)
+        up_genes, down_genes = split_deg_lists(filtered_deg, fc_threshold, sig_threshold)
         st.session_state.up_genes = up_genes
         st.session_state.down_genes = down_genes
 
@@ -450,9 +474,17 @@ def run_comparison_ui() -> None:
             st.stop()
 
         log_parts: list[str] = [
-            f"**Up-regulated genes:** {len(up_genes)}",
-            f"**Down-regulated genes:** {len(down_genes)}",
+            f"**Total measured genes:** {len(parsed)}",
         ]
+        if len(filtered_deg) < len(parsed):
+            log_parts.append(
+                f"**After baseMean filter (>= {basemean_threshold:.0f}):** "
+                f"{len(filtered_deg)} genes"
+            )
+        log_parts.extend([
+            f"**Up-regulated genes** (|log2FC| >= {fc_threshold}, padj <= {sig_threshold}): {len(up_genes)}",
+            f"**Down-regulated genes** (|log2FC| >= {fc_threshold}, padj <= {sig_threshold}): {len(down_genes)}",
+        ])
 
         with st.status("Running comparison analysis...", expanded=True) as status:
             progress = st.empty()
@@ -510,7 +542,12 @@ def run_comparison_ui() -> None:
             # --- GSEA prerank ---
             if run_gsea:
                 progress.write("Running GSEA prerank on full ranked list...")
-                ranked = make_ranked_list(parsed)
+                # Use filtered_deg (baseMean-filtered) so GSEA analyzes
+                # the same quality-filtered gene set as GeneWalk/ORA.
+                # Note: GSEA gets ALL genes that pass the quality filter
+                # (not just significant ones), because prerank needs the
+                # full ranked list to compute enrichment scores properly.
+                ranked = make_ranked_list(filtered_deg)
 
                 # Report which ranking metric was selected
                 metric_used = ranked.attrs.get("ranking_metric", "log2fc")
@@ -577,10 +614,10 @@ def run_comparison_ui() -> None:
                         progress.write(f"ORA ({_label}): {msg}")
 
                     ora_outdir = tmp / f"ora_{label.replace('-', '_')}" if base_folder else None
-                    # Use all genes in the DEG table as ORA background —
-                    # this is the correct universe of measured genes, not
-                    # the entire genome.
-                    all_measured_genes = parsed["gene"].unique().tolist()
+                    # Use quality-filtered genes as ORA background —
+                    # this is the correct universe of reliably measured
+                    # genes, not the entire genome.
+                    all_measured_genes = filtered_deg["gene"].unique().tolist()
                     ora_res = run_ora(
                         gene_list=genes,
                         gene_sets=selected_gene_sets,

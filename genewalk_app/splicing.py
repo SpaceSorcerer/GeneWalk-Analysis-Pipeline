@@ -318,14 +318,23 @@ def filter_splicing_events(
     min_psi: float = 0.0,
     max_psi: float = 1.0,
 ) -> pd.DataFrame:
-    """Filter splicing events by delta-PSI, FDR, and PSI range."""
+    """Filter splicing events by delta-PSI, FDR, and PSI range.
+
+    If the FDR/p-value column is entirely NaN (common with vast-tools
+    output that lacks statistical testing), the FDR filter is skipped
+    and events are filtered by |delta-PSI| only.
+    """
     out = df.copy()
 
     if "dpsi" in out.columns:
         out = out[out["dpsi"].abs() >= dpsi_threshold]
 
-    if "fdr" in out.columns:
-        out = out[out["fdr"].notna() & (out["fdr"] <= fdr_threshold)]
+    # Only apply FDR filter when FDR values actually exist.
+    # vast-tools diff output often lacks p-values entirely.
+    if "fdr" in out.columns and out["fdr"].notna().any():
+        # Keep events that either have FDR <= threshold OR have no FDR
+        # (so that events without p-values aren't silently dropped).
+        out = out[out["fdr"].isna() | (out["fdr"] <= fdr_threshold)]
 
     # PSI range filter (at least one condition must be in range)
     for col in ("psi_1", "psi_2"):
