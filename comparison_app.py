@@ -192,7 +192,9 @@ def run_comparison_ui() -> None:
                     "Wald statistic column",
                     none_cols,
                     index=none_cols.index(detected["stat"]) if detected["stat"] else 0,
-                    help="Wald test statistic (DESeq2 stat column).",
+                    help="Wald test statistic (DESeq2 stat column). "
+                         "Used as the GSEA ranking metric when available — "
+                         "produces better results than log2FC alone.",
                 )
                 pvalue_col_name = st.selectbox(
                     "Raw p-value column",
@@ -510,24 +512,33 @@ def run_comparison_ui() -> None:
                 progress.write("Running GSEA prerank on full ranked list...")
                 ranked = make_ranked_list(parsed)
 
-                # Diagnostic: check ranked list looks like log2FC values
-                if len(ranked) > 0 and "log2fc" in ranked.columns:
-                    scores = ranked["log2fc"]
+                # Report which ranking metric was selected
+                metric_used = ranked.attrs.get("ranking_metric", "log2fc")
+                metric_labels = {
+                    "stat": "Wald statistic (DESeq2 stat column)",
+                    "signed_pvalue": "-log10(p-value) \u00d7 sign(log2FC)",
+                    "log2fc": "log2 fold-change",
+                }
+                log_parts.append(
+                    f"GSEA ranking metric: **{metric_labels.get(metric_used, metric_used)}**"
+                )
+                if metric_used == "log2fc":
+                    log_parts.append(
+                        "\u26a0\ufe0f *Tip: Map the DESeq2 **stat** (Wald statistic) column "
+                        "in the sidebar for better GSEA resolution and fewer tied ranks.*"
+                    )
+
+                # Diagnostic: check ranked list has both positive and negative scores
+                if len(ranked) > 0 and "score" in ranked.columns:
+                    scores = ranked["score"]
                     n_pos = (scores > 0).sum()
                     n_neg = (scores < 0).sum()
                     if n_pos == 0 or n_neg == 0:
                         log_parts.append(
                             "**Warning:** All ranking scores have the same sign. "
-                            "GSEA expects log2 fold-change values with both positive "
+                            "GSEA expects scores with both positive "
                             "(up-regulated) and negative (down-regulated) values. "
                             "Check that the correct column was selected."
-                        )
-                    elif scores.min() >= 0:
-                        log_parts.append(
-                            "**Warning:** No negative ranking scores detected. "
-                            "If your metric is -log10(p)*sign(FC) or similar, "
-                            "GSEA should still work, but NES direction may differ "
-                            "from log2FC-based analyses."
                         )
 
                 if len(ranked) < 15:
@@ -798,6 +809,7 @@ def run_comparison_ui() -> None:
             st.plotly_chart(
                 deg_overview_volcano(deg, fc_threshold, sig_threshold),
                 width="stretch",
+                key="plt_1",
             )
 
         if gw_up is not None and gw_down is not None:
@@ -805,6 +817,7 @@ def run_comparison_ui() -> None:
                 direction_volcano(gw_up, gw_down, padj_col=gw_padj_col,
                                   padj_threshold=gw_padj_threshold),
                 width="stretch",
+                key="plt_2",
             )
 
     # ---- Tab: DEG Explorer ----
@@ -964,6 +977,7 @@ def run_comparison_ui() -> None:
                 st.plotly_chart(
                     deg_overview_volcano(deg_filtered, fc_threshold, sig_threshold),
                     width="stretch",
+                    key="plt_3",
                 )
 
             with deg_sub[1]:
@@ -972,6 +986,7 @@ def run_comparison_ui() -> None:
                         ma_plot(deg_filtered, "baseMean", "log2fc", "padj",
                                 fc_threshold, sig_threshold),
                         width="stretch",
+                        key="plt_4",
                     )
                 else:
                     st.info("MA plot requires a baseMean column. Map it in the sidebar under 'Additional DESeq2 columns'.")
@@ -982,6 +997,7 @@ def run_comparison_ui() -> None:
                     top_genes_bar(deg_filtered, "log2fc", "padj",
                                   sig_threshold, top_n_deg),
                     width="stretch",
+                    key="plt_5",
                 )
 
             with deg_sub[3]:
@@ -991,6 +1007,7 @@ def run_comparison_ui() -> None:
                         st.plotly_chart(
                             pvalue_histogram(deg_filtered, "pvalue"),
                             width="stretch",
+                            key="plt_6",
                         )
                     else:
                         st.info("Raw p-value column not mapped.")
@@ -998,6 +1015,7 @@ def run_comparison_ui() -> None:
                     st.plotly_chart(
                         padj_histogram(deg_filtered, "padj"),
                         width="stretch",
+                        key="plt_7",
                     )
 
             with deg_sub[4]:
@@ -1007,12 +1025,14 @@ def run_comparison_ui() -> None:
                         deg_category_pie(deg_filtered, "log2fc", "padj",
                                          fc_threshold, sig_threshold),
                         width="stretch",
+                        key="plt_8",
                     )
                 with cat_col2:
                     if "baseMean" in deg_filtered.columns:
                         st.plotly_chart(
                             basemean_distribution(deg_filtered, "baseMean"),
                             width="stretch",
+                            key="plt_9",
                         )
 
             with deg_sub[5]:
@@ -1023,6 +1043,7 @@ def run_comparison_ui() -> None:
                             lfc_vs_stat_scatter(deg_filtered, "log2fc", "stat",
                                                 "padj", sig_threshold),
                             width="stretch",
+                            key="plt_10",
                         )
                     else:
                         st.info("Wald statistic column not mapped.")
@@ -1031,6 +1052,7 @@ def run_comparison_ui() -> None:
                         st.plotly_chart(
                             lfc_se_scatter(deg_filtered, "baseMean", "lfcSE"),
                             width="stretch",
+                            key="plt_11",
                         )
                     else:
                         st.info("Need both baseMean and lfcSE for this plot.")
@@ -1085,7 +1107,7 @@ def run_comparison_ui() -> None:
                         padj_threshold=gw_padj_threshold,
                     )
                     if not shared.empty:
-                        st.plotly_chart(shared_terms_bar(shared), width="stretch")
+                        st.plotly_chart(shared_terms_bar(shared), width="stretch", key="plt_12")
                         st.dataframe(shared, width="stretch", height=400)
                     else:
                         st.info("No GO terms are significant in both up- and down-regulated gene sets at the current threshold.")
@@ -1105,12 +1127,14 @@ def run_comparison_ui() -> None:
                     nes_bar_chart(gsea_res, fdr_threshold=gsea_fdr_threshold,
                                   top_n=top_n_nes),
                     width="stretch",
+                    key="plt_13",
                 )
 
             with gsea_sub[1]:
                 st.plotly_chart(
                     gsea_dot_plot(gsea_res, fdr_threshold=gsea_fdr_threshold),
                     width="stretch",
+                    key="plt_14",
                 )
 
             with gsea_sub[2]:
@@ -1162,11 +1186,13 @@ def run_comparison_ui() -> None:
                         st.plotly_chart(
                             ora_bar_chart(ora_up, label="Up-regulated"),
                             width="stretch",
+                            key="plt_15",
                         )
                     with ora_up_viz[1]:
                         st.plotly_chart(
                             ora_dot_plot(ora_up, label="Up-regulated"),
                             width="stretch",
+                            key="plt_16",
                         )
                     with ora_up_viz[2]:
                         st.dataframe(ora_up, width="stretch", height=400)
@@ -1189,11 +1215,13 @@ def run_comparison_ui() -> None:
                         st.plotly_chart(
                             ora_bar_chart(ora_down, label="Down-regulated"),
                             width="stretch",
+                            key="plt_17",
                         )
                     with ora_down_viz[1]:
                         st.plotly_chart(
                             ora_dot_plot(ora_down, label="Down-regulated"),
                             width="stretch",
+                            key="plt_18",
                         )
                     with ora_down_viz[2]:
                         st.dataframe(ora_down, width="stretch", height=400)
@@ -1251,27 +1279,29 @@ def run_comparison_ui() -> None:
                 st.plotly_chart(
                     spl_volcano(splicing, spl_dpsi_thresh, spl_fdr_thresh),
                     width="stretch",
+                    key="plt_19",
                 )
 
             with spl_tabs[1]:
                 st.plotly_chart(
                     spl_top_bar(spl_filtered, top_n=30),
                     width="stretch",
+                    key="plt_20",
                 )
 
             with spl_tabs[2]:
                 dist_c1, dist_c2 = st.columns(2)
                 with dist_c1:
-                    st.plotly_chart(spl_dpsi_dist(splicing), width="stretch")
+                    st.plotly_chart(spl_dpsi_dist(splicing), width="stretch", key="plt_21")
                 with dist_c2:
-                    st.plotly_chart(spl_event_summary(spl_filtered), width="stretch")
-                st.plotly_chart(spl_gene_counts(spl_filtered), width="stretch")
+                    st.plotly_chart(spl_event_summary(spl_filtered), width="stretch", key="plt_22")
+                st.plotly_chart(spl_gene_counts(spl_filtered), width="stretch", key="plt_23")
 
             with spl_tabs[3]:
                 spl_genes = sorted(spl_filtered["gene"].dropna().unique().tolist())
                 if spl_genes:
                     spl_gene = st.selectbox("Gene", spl_genes, key="spl_gene_comp")
-                    st.plotly_chart(spl_gene_detail(splicing, spl_gene), width="stretch")
+                    st.plotly_chart(spl_gene_detail(splicing, spl_gene), width="stretch", key="plt_24")
                 else:
                     st.info("No significant splicing events at current thresholds.")
 
@@ -1310,7 +1340,7 @@ def run_comparison_ui() -> None:
         )
 
         if not concordance.empty:
-            st.plotly_chart(concordance_bar(concordance), width="stretch")
+            st.plotly_chart(concordance_bar(concordance), width="stretch", key="plt_25")
             st.dataframe(concordance, width="stretch", height=400)
         else:
             st.info(
