@@ -63,10 +63,10 @@ from genewalk_app.runner import (
     save_gene_list,
 )
 from genewalk_app.splicing import (
-    auto_detect_format,
     filter_splicing_events,
     parse_rmats_file,
     parse_vasttools,
+    splicing_summary,
 )
 from genewalk_app.styles import get_custom_css
 
@@ -1214,7 +1214,6 @@ def run_comparison_ui() -> None:
         with tabs[tab_idx]:
             tab_idx += 1
 
-            from genewalk_app.splicing import filter_splicing_events, splicing_summary
             from genewalk_app.splicing_viz import (
                 dpsi_volcano as spl_volcano,
                 event_type_summary as spl_event_summary,

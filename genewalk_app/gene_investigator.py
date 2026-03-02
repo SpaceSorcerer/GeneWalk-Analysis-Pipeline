@@ -305,15 +305,17 @@ def render_gene_investigator(
     if deg_ev:
         st.markdown("#### Differential Expression")
         deg_cols = st.columns(4)
-        if "log2fc" in deg_ev:
+        if "log2fc" in deg_ev and pd.notna(deg_ev["log2fc"]):
             lfc = deg_ev["log2fc"]
             direction = "Up" if lfc > 0 else "Down"
             deg_cols[0].metric("log2FC", f"{lfc:.3f}", delta=direction)
-        if "padj" in deg_ev:
+        if "padj" in deg_ev and pd.notna(deg_ev["padj"]):
             deg_cols[1].metric("padj", f"{deg_ev['padj']:.2e}")
-        if "baseMean" in deg_ev:
+        elif "padj" in deg_ev:
+            deg_cols[1].metric("padj", "N/A")
+        if "baseMean" in deg_ev and pd.notna(deg_ev["baseMean"]):
             deg_cols[2].metric("baseMean", f"{deg_ev['baseMean']:.1f}")
-        if "stat" in deg_ev:
+        if "stat" in deg_ev and pd.notna(deg_ev["stat"]):
             deg_cols[3].metric("Wald stat", f"{deg_ev['stat']:.2f}")
 
         if deg is not None and "log2fc" in deg.columns and "padj" in deg.columns:
@@ -379,7 +381,7 @@ def render_gene_investigator(
             types = splice_ev["event_type"].value_counts().to_dict()
             type_str = ", ".join(f"{k}: {v}" for k, v in types.items())
             spl_cols[1].metric("Event Types", type_str)
-        if "dpsi" in splice_ev.columns:
+        if "dpsi" in splice_ev.columns and splice_ev["dpsi"].notna().any():
             max_dpsi = splice_ev["dpsi"].abs().max()
             spl_cols[2].metric("Max |\u0394PSI|", f"{max_dpsi:.3f}")
 
