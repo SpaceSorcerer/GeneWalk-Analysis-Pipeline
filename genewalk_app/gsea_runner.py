@@ -189,7 +189,7 @@ def _clean_gsea_results(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _clean_ora_results(df: pd.DataFrame) -> pd.DataFrame:
-    """Standardize ORA result column names."""
+    """Standardize ORA result column names and parse overlap ratios."""
     rename = {
         "Term": "term",
         "Overlap": "overlap",
@@ -203,4 +203,11 @@ def _clean_ora_results(df: pd.DataFrame) -> pd.DataFrame:
     for col in ("pval", "fdr", "odds_ratio", "combined_score"):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
+    # Parse "3/50" overlap strings into numeric columns for visualization
+    if "overlap" in df.columns:
+        parts = df["overlap"].astype(str).str.split("/", expand=True)
+        if parts.shape[1] == 2:
+            df["overlap_count"] = pd.to_numeric(parts[0], errors="coerce")
+            df["overlap_size"] = pd.to_numeric(parts[1], errors="coerce")
+            df["overlap_ratio"] = df["overlap_count"] / df["overlap_size"]
     return df

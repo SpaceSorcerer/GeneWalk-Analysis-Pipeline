@@ -34,8 +34,10 @@ from genewalk_app.comparison_viz import (
     direction_volcano,
     gene_set_summary_metrics,
     gsea_dot_plot,
+    gsea_leading_edge_table,
     nes_bar_chart,
     ora_bar_chart,
+    ora_dot_plot,
     shared_terms_bar,
 )
 from genewalk_app.deg_visualizations import (
@@ -50,6 +52,7 @@ from genewalk_app.deg_visualizations import (
     top_genes_bar,
 )
 from genewalk_app.dashboard import render_dashboard
+from genewalk_app.gene_investigator import render_gene_investigator
 from genewalk_app.gsea_runner import DEFAULT_GENE_SETS, run_gsea_prerank, run_ora
 from genewalk_app.runner import (
     _sanitize_project_name,
@@ -58,6 +61,12 @@ from genewalk_app.runner import (
     load_results,
     run_genewalk,
     save_gene_list,
+)
+from genewalk_app.splicing import (
+    auto_detect_format,
+    filter_splicing_events,
+    parse_rmats_file,
+    parse_vasttools,
 )
 from genewalk_app.styles import get_custom_css
 
@@ -85,6 +94,7 @@ def run_comparison_ui() -> None:
         "gsea_results": None,
         "ora_results_up": None,
         "ora_results_down": None,
+        "splicing_data": None,
         "comp_run_log": None,
         "analysis_complete": False,
     }
@@ -322,6 +332,33 @@ def run_comparison_ui() -> None:
         down_gw_upload = st.file_uploader("GeneWalk Down results CSV", type=["csv"], key="down_gw_csv")
         gsea_upload = st.file_uploader("GSEA results CSV", type=["csv"], key="gsea_csv")
 
+        # ---- Splicing data (optional) ----
+        st.markdown("---")
+        st.markdown('<p class="section-header">Splicing Data (Optional)</p>',
+                    unsafe_allow_html=True)
+        st.caption(
+            "Upload differential splicing results (vast-tools or rMATS) "
+            "to integrate into the Gene Investigator."
+        )
+        splicing_source = st.radio(
+            "Splicing source",
+            ["vast-tools", "rMATS"],
+            key="splicing_source_radio",
+            label_visibility="collapsed",
+        )
+        splicing_upload = st.file_uploader(
+            "Upload splicing results",
+            type=["csv", "tsv", "txt", "tab"],
+            key="splicing_upload",
+        )
+        rmats_event = "SE"
+        if splicing_source == "rMATS":
+            rmats_event = st.selectbox(
+                "Event type",
+                ["SE", "MXE", "A3SS", "A5SS", "RI"],
+                key="rmats_event_comp",
+            )
+
 
     # ---------------------------------------------------------------------------
     # Handle uploads of previous results
@@ -336,6 +373,22 @@ def run_comparison_ui() -> None:
                 st.session_state[state_key] = pd.read_csv(upload_key)
             except Exception as exc:
                 st.error(f"Could not read CSV: {exc}")
+
+    # Handle splicing upload
+    if splicing_upload is not None:
+        try:
+            try:
+                spl_content = splicing_upload.getvalue().decode("utf-8")
+            except UnicodeDecodeError:
+                spl_content = splicing_upload.getvalue().decode("latin-1")
+            spl_sep = "\t" if splicing_upload.name.endswith((".tsv", ".txt", ".tab")) else ","
+            spl_raw = pd.read_csv(io.StringIO(spl_content), sep=spl_sep)
+            if splicing_source == "vast-tools":
+                st.session_state.splicing_data = parse_vasttools(spl_raw)
+            else:
+                st.session_state.splicing_data = parse_rmats_file(spl_raw, event_type=rmats_event)
+        except Exception as exc:
+            st.error(f"Could not parse splicing file: {exc}")
 
     # ---------------------------------------------------------------------------
     # Run analysis
@@ -456,6 +509,27 @@ def run_comparison_ui() -> None:
             if run_gsea:
                 progress.write("Running GSEA prerank on full ranked list...")
                 ranked = make_ranked_list(parsed)
+
+                # Diagnostic: check ranked list looks like log2FC values
+                if len(ranked) > 0 and "log2fc" in ranked.columns:
+                    scores = ranked["log2fc"]
+                    n_pos = (scores > 0).sum()
+                    n_neg = (scores < 0).sum()
+                    if n_pos == 0 or n_neg == 0:
+                        log_parts.append(
+                            "**Warning:** All ranking scores have the same sign. "
+                            "GSEA expects log2 fold-change values with both positive "
+                            "(up-regulated) and negative (down-regulated) values. "
+                            "Check that the correct column was selected."
+                        )
+                    elif scores.min() >= 0:
+                        log_parts.append(
+                            "**Warning:** No negative ranking scores detected. "
+                            "If your metric is -log10(p)*sign(FC) or similar, "
+                            "GSEA should still work, but NES direction may differ "
+                            "from log2FC-based analyses."
+                        )
+
                 if len(ranked) < 15:
                     log_parts.append("Skipped GSEA: fewer than 15 ranked genes.")
                 else:
@@ -690,11 +764,14 @@ def run_comparison_ui() -> None:
     list). GSEA uses the full ranked list with fold-change magnitudes.</li>
     <li>GeneWalk uses GO terms directly. GSEA/ORA use curated pathway
     databases (KEGG, Reactome, Hallmarks) which may group terms differently.</li>
-    <li>Term names differ across databases, so exact string matching between
-    methods will miss some overlaps.</li>
+    <li>Term names differ across databases. The concordance analysis uses
+    normalized matching (stripping prefixes and formatting), but some overlaps
+    may still be missed when databases use very different naming conventions.</li>
     </ul>
     </div>
         """, unsafe_allow_html=True)
+
+    splicing = st.session_state.splicing_data
 
     # ---- Tabs ----
     st.markdown("")
@@ -705,7 +782,10 @@ def run_comparison_ui() -> None:
         available_tabs.append("GSEA Results")
     if ora_up is not None or ora_down is not None:
         available_tabs.append("ORA Results")
+    if splicing is not None and not splicing.empty:
+        available_tabs.append("Splicing")
     available_tabs.append("Cross-Method")
+    available_tabs.append("Gene Investigator")
     available_tabs.append("Data Tables")
 
     tabs = st.tabs(available_tabs)
@@ -1017,7 +1097,7 @@ def run_comparison_ui() -> None:
         with tabs[tab_idx]:
             tab_idx += 1
 
-            gsea_sub = st.tabs(["NES Bar Chart", "Dot Plot", "Full Table"])
+            gsea_sub = st.tabs(["NES Bar Chart", "Dot Plot", "Leading Edge Genes", "Full Table"])
 
             with gsea_sub[0]:
                 top_n_nes = st.slider("Top pathways", 10, 60, 30, key="nes_top")
@@ -1034,6 +1114,33 @@ def run_comparison_ui() -> None:
                 )
 
             with gsea_sub[2]:
+                st.markdown(
+                    '<div class="info-tip">Leading edge genes are the core subset '
+                    "driving each pathway's enrichment score. These are the genes "
+                    "that appear before the running enrichment score reaches its "
+                    "maximum (for up-regulated) or minimum (for down-regulated) "
+                    "peak. They represent the most biologically relevant genes "
+                    "for each pathway.</div>",
+                    unsafe_allow_html=True,
+                )
+                le_table = gsea_leading_edge_table(
+                    gsea_res, fdr_threshold=gsea_fdr_threshold, top_n=30,
+                )
+                if not le_table.empty:
+                    st.dataframe(le_table, width="stretch", height=500)
+                    csv_le = io.StringIO()
+                    le_table.to_csv(csv_le, index=False)
+                    st.download_button(
+                        "Download leading edge genes",
+                        csv_le.getvalue(),
+                        file_name="gsea_leading_edge_genes.csv",
+                        mime="text/csv",
+                        key="dl_leading_edge",
+                    )
+                else:
+                    st.info("No significant pathways at current FDR threshold.")
+
+            with gsea_sub[3]:
                 if gsea_res is not None and not gsea_res.empty:
                     display_gsea = gsea_res.copy()
                     if "fdr" in display_gsea.columns:
@@ -1050,25 +1157,124 @@ def run_comparison_ui() -> None:
 
             with ora_sub[0]:
                 if ora_up is not None and not ora_up.empty:
-                    st.plotly_chart(
-                        ora_bar_chart(ora_up, label="Up-regulated"),
-                        width="stretch",
-                    )
-                    with st.expander("Full ORA results (up)", expanded=False):
+                    ora_up_viz = st.tabs(["Bar Chart", "Dot Plot", "Data"])
+                    with ora_up_viz[0]:
+                        st.plotly_chart(
+                            ora_bar_chart(ora_up, label="Up-regulated"),
+                            width="stretch",
+                        )
+                    with ora_up_viz[1]:
+                        st.plotly_chart(
+                            ora_dot_plot(ora_up, label="Up-regulated"),
+                            width="stretch",
+                        )
+                    with ora_up_viz[2]:
                         st.dataframe(ora_up, width="stretch", height=400)
+                        csv_ora_up = io.StringIO()
+                        ora_up.to_csv(csv_ora_up, index=False)
+                        st.download_button(
+                            "Download ORA up results",
+                            csv_ora_up.getvalue(),
+                            file_name="ora_up_results.csv",
+                            mime="text/csv",
+                            key="dl_ora_up_tab",
+                        )
                 else:
                     st.info("No ORA results for up-regulated genes.")
 
             with ora_sub[1]:
                 if ora_down is not None and not ora_down.empty:
-                    st.plotly_chart(
-                        ora_bar_chart(ora_down, label="Down-regulated"),
-                        width="stretch",
-                    )
-                    with st.expander("Full ORA results (down)", expanded=False):
+                    ora_down_viz = st.tabs(["Bar Chart", "Dot Plot", "Data"])
+                    with ora_down_viz[0]:
+                        st.plotly_chart(
+                            ora_bar_chart(ora_down, label="Down-regulated"),
+                            width="stretch",
+                        )
+                    with ora_down_viz[1]:
+                        st.plotly_chart(
+                            ora_dot_plot(ora_down, label="Down-regulated"),
+                            width="stretch",
+                        )
+                    with ora_down_viz[2]:
                         st.dataframe(ora_down, width="stretch", height=400)
+                        csv_ora_down = io.StringIO()
+                        ora_down.to_csv(csv_ora_down, index=False)
+                        st.download_button(
+                            "Download ORA down results",
+                            csv_ora_down.getvalue(),
+                            file_name="ora_down_results.csv",
+                            mime="text/csv",
+                            key="dl_ora_down_tab",
+                        )
                 else:
                     st.info("No ORA results for down-regulated genes.")
+
+    # ---- Tab: Splicing ----
+    if "Splicing" in available_tabs:
+        with tabs[tab_idx]:
+            tab_idx += 1
+
+            from genewalk_app.splicing import filter_splicing_events, splicing_summary
+            from genewalk_app.splicing_viz import (
+                dpsi_volcano as spl_volcano,
+                event_type_summary as spl_event_summary,
+                top_splicing_events_bar as spl_top_bar,
+                dpsi_distribution as spl_dpsi_dist,
+                gene_splicing_detail as spl_gene_detail,
+                genes_by_event_count as spl_gene_counts,
+            )
+
+            spl_fc1, spl_fc2 = st.columns(2)
+            spl_dpsi_thresh = spl_fc1.number_input(
+                "|\u0394PSI| threshold", 0.0, 1.0, 0.1, 0.01,
+                format="%.2f", key="spl_dpsi_thresh",
+            )
+            spl_fdr_thresh = spl_fc2.number_input(
+                "Splicing FDR", 0.0, 1.0, 0.05, 0.01,
+                format="%.3f", key="spl_fdr_thresh",
+            )
+
+            spl_filtered = filter_splicing_events(
+                splicing, dpsi_threshold=spl_dpsi_thresh, fdr_threshold=spl_fdr_thresh,
+            )
+            spl_summary = splicing_summary(spl_filtered)
+
+            sm = st.columns(4)
+            sm[0].metric("Sig. Splicing Events", f"{spl_summary['total_events']:,}")
+            sm[1].metric("Affected Genes", f"{spl_summary['unique_genes']:,}")
+            sm[2].metric("Mean |\u0394PSI|", f"{spl_summary['mean_abs_dpsi']:.3f}")
+            et_str = ", ".join(f"{k}: {v}" for k, v in spl_summary.get("event_types", {}).items())
+            sm[3].metric("Event Types", et_str if et_str else "N/A")
+
+            spl_tabs = st.tabs(["Volcano", "Top Events", "Distributions", "Per-Gene"])
+
+            with spl_tabs[0]:
+                st.plotly_chart(
+                    spl_volcano(splicing, spl_dpsi_thresh, spl_fdr_thresh),
+                    width="stretch",
+                )
+
+            with spl_tabs[1]:
+                st.plotly_chart(
+                    spl_top_bar(spl_filtered, top_n=30),
+                    width="stretch",
+                )
+
+            with spl_tabs[2]:
+                dist_c1, dist_c2 = st.columns(2)
+                with dist_c1:
+                    st.plotly_chart(spl_dpsi_dist(splicing), width="stretch")
+                with dist_c2:
+                    st.plotly_chart(spl_event_summary(spl_filtered), width="stretch")
+                st.plotly_chart(spl_gene_counts(spl_filtered), width="stretch")
+
+            with spl_tabs[3]:
+                spl_genes = sorted(spl_filtered["gene"].dropna().unique().tolist())
+                if spl_genes:
+                    spl_gene = st.selectbox("Gene", spl_genes, key="spl_gene_comp")
+                    st.plotly_chart(spl_gene_detail(splicing, spl_gene), width="stretch")
+                else:
+                    st.info("No significant splicing events at current thresholds.")
 
     # ---- Tab: Cross-Method ----
     with tabs[tab_idx]:
@@ -1076,9 +1282,10 @@ def run_comparison_ui() -> None:
 
         st.markdown("""
         <div class="info-tip">Terms found by multiple methods (GeneWalk, GSEA, ORA)
-        represent the highest-confidence functional findings. Terms matched here
-        use exact name matching &mdash; some overlaps may be missed due to naming
-        differences across databases.</div>
+        represent the highest-confidence functional findings. Terms are matched
+        using normalized names (stripping database prefixes, lowercasing, and
+        removing formatting differences), so GeneWalk GO terms can match GSEA
+        pathway names even when databases use different naming conventions.</div>
         """, unsafe_allow_html=True)
 
         # Merge GW results for concordance
@@ -1113,11 +1320,28 @@ def run_comparison_ui() -> None:
                 "differ across databases (GO vs KEGG vs Reactome)."
             )
 
+    # ---- Tab: Gene Investigator ----
+    with tabs[tab_idx]:
+        tab_idx += 1
+
+        render_gene_investigator(
+            deg=deg,
+            gw_up=gw_up,
+            gw_down=gw_down,
+            gsea_res=gsea_res,
+            ora_up=ora_up,
+            ora_down=ora_down,
+            splicing=splicing,
+            gw_padj_col=gw_padj_col,
+            gw_padj_threshold=gw_padj_threshold,
+            fc_threshold=fc_threshold,
+            padj_threshold=sig_threshold,
+        )
+
     # ---- Tab: Data Tables ----
     with tabs[tab_idx]:
-        dt_sub = st.tabs(["DEG Table", "GW Up", "GW Down", "GSEA", "ORA Up", "ORA Down"])
-
-        datasets = [
+        dt_sub_names = ["DEG Table", "GW Up", "GW Down", "GSEA", "ORA Up", "ORA Down"]
+        dt_datasets = [
             (deg, "deg_table.csv"),
             (gw_up, "genewalk_up_results.csv"),
             (gw_down, "genewalk_down_results.csv"),
@@ -1125,8 +1349,12 @@ def run_comparison_ui() -> None:
             (ora_up, "ora_up_results.csv"),
             (ora_down, "ora_down_results.csv"),
         ]
+        if splicing is not None and not splicing.empty:
+            dt_sub_names.append("Splicing")
+            dt_datasets.append((splicing, "splicing_results.csv"))
+        dt_sub = st.tabs(dt_sub_names)
 
-        for sub_tab, (data, filename) in zip(dt_sub, datasets):
+        for sub_tab, (data, filename) in zip(dt_sub, dt_datasets):
             with sub_tab:
                 if data is not None and not data.empty:
                     st.markdown(f"**{len(data):,}** rows")

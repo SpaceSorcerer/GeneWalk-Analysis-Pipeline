@@ -109,6 +109,7 @@ st.markdown("""
 }
 .mode-gw { background: #dbeafe; color: #1e40af; }
 .mode-comp { background: #d1fae5; color: #065f46; }
+.mode-spl { background: #fce7f3; color: #9d174d; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -116,7 +117,7 @@ st.markdown("""
 # Session state
 # ---------------------------------------------------------------------------
 if "app_mode" not in st.session_state:
-    st.session_state.app_mode = None  # None = show chooser, "genewalk" or "comparison"
+    st.session_state.app_mode = None  # None = chooser, "genewalk", "comparison", or "splicing"
 if "results_df" not in st.session_state:
     st.session_state.results_df = None
 if "run_log" not in st.session_state:
@@ -127,13 +128,20 @@ if "run_log" not in st.session_state:
 # ---------------------------------------------------------------------------
 with st.sidebar:
     if st.session_state.app_mode is not None:
-        current_label = (
-            "GeneWalk Analysis" if st.session_state.app_mode == "genewalk"
-            else "GSEA + GeneWalk Comparison"
-        )
+        _mode_labels = {
+            "genewalk": "GeneWalk Analysis",
+            "comparison": "GSEA + GeneWalk Comparison",
+            "splicing": "Splicing Analysis",
+        }
+        _mode_classes = {
+            "genewalk": "mode-gw",
+            "comparison": "mode-comp",
+            "splicing": "mode-spl",
+        }
+        current_label = _mode_labels.get(st.session_state.app_mode, "")
+        mode_class = _mode_classes.get(st.session_state.app_mode, "mode-gw")
         st.markdown(
-            f'<div class="mode-indicator '
-            f'{"mode-gw" if st.session_state.app_mode == "genewalk" else "mode-comp"}">'
+            f'<div class="mode-indicator {mode_class}">'
             f'{current_label}</div>',
             unsafe_allow_html=True,
         )
@@ -159,7 +167,7 @@ if st.session_state.app_mode is None:
     st.markdown("")
     st.markdown("### Choose Your Analysis Pipeline")
 
-    col_gw, col_comp = st.columns(2, gap="large")
+    col_gw, col_comp, col_spl = st.columns(3, gap="large")
 
     with col_gw:
         st.markdown("""
@@ -201,7 +209,7 @@ if st.session_state.app_mode is None:
             <li>Differential expression results (DESeq2, edgeR, limma)</li>
             <li>Comparing up vs down regulated genes</li>
             <li>Cross-method concordance (GeneWalk + GSEA + ORA)</li>
-            <li>Volcano plots, MA plots, DEG filtering</li>
+            <li>Gene Investigator for per-gene deep dives</li>
             </ul>
             <strong>Input:</strong> DEG table (.csv with gene, log2FC, padj)
             </div>
@@ -216,6 +224,34 @@ if st.session_state.app_mode is None:
             st.session_state.app_mode = "comparison"
             st.rerun()
 
+    with col_spl:
+        st.markdown("""
+        <div class="pipeline-card">
+            <div class="pipeline-icon">&#x2702;&#xFE0F;</div>
+            <h3>Splicing Analysis</h3>
+            <p>Upload differential splicing results from vast-tools or rMATS
+            to explore alternative splicing events across conditions.</p>
+            <div class="pipeline-features">
+            <strong>Best for:</strong>
+            <ul>
+            <li>vast-tools diff/compare output</li>
+            <li>rMATS event-type results (SE, RI, A3SS, A5SS, MXE)</li>
+            <li>&Delta;PSI volcano plots and event classification</li>
+            <li>Per-gene splicing investigation</li>
+            </ul>
+            <strong>Input:</strong> Splicing table (.tsv/.txt)
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button(
+            "Start Splicing Analysis",
+            type="primary",
+            use_container_width=True,
+            key="choose_spl",
+        ):
+            st.session_state.app_mode = "splicing"
+            st.rerun()
+
     st.markdown("")
     with st.expander("What's the difference?", expanded=False):
         st.markdown("""
@@ -225,38 +261,43 @@ if st.session_state.app_mode is None:
     <th>Feature</th>
     <th>GeneWalk Analysis</th>
     <th>GSEA + GeneWalk Comparison</th>
+    <th>Splicing Analysis</th>
 </tr>
 <tr>
     <td><strong>Input</strong></td>
     <td>Plain gene list (.txt)</td>
-    <td>DEG table with fold-change & p-values</td>
+    <td>DEG table with fold-change &amp; p-values</td>
+    <td>vast-tools or rMATS output</td>
 </tr>
 <tr>
     <td><strong>Analyses</strong></td>
     <td>GeneWalk only</td>
-    <td>GeneWalk (up & down) + GSEA prerank + ORA</td>
+    <td>GeneWalk (up &amp; down) + GSEA + ORA + Gene Investigator</td>
+    <td>&Delta;PSI analysis, event classification</td>
 </tr>
 <tr>
-    <td><strong>Fold-change</strong></td>
-    <td>Not used</td>
-    <td>Used for GSEA ranking & up/down splitting</td>
+    <td><strong>What it measures</strong></td>
+    <td>Context-specific GO functions</td>
+    <td>Changes in RNA abundance + pathway enrichment</td>
+    <td>Changes in RNA splicing (exon inclusion/exclusion)</td>
 </tr>
 <tr>
-    <td><strong>DEG Exploration</strong></td>
+    <td><strong>Cross-analysis</strong></td>
     <td>No</td>
-    <td>Yes &mdash; volcano, MA plot, filtering, diagnostics</td>
-</tr>
-<tr>
-    <td><strong>Cross-method</strong></td>
-    <td>No</td>
-    <td>Yes &mdash; concordance across GeneWalk, GSEA, ORA</td>
+    <td>Yes &mdash; concordance + Gene Investigator (+ splicing if uploaded)</td>
+    <td>Standalone (or upload into Comparison pipeline)</td>
 </tr>
 <tr>
     <td><strong>Use case</strong></td>
     <td>Quick gene list from any source</td>
-    <td>Full differential expression analysis pipeline</td>
+    <td>Full differential expression characterization</td>
+    <td>Alternative splicing analysis</td>
 </tr>
 </table>
+<p><strong>Tip:</strong> The Comparison Pipeline includes a
+<strong>Gene Investigator</strong> that lets you select any gene and view
+all evidence across DEG, GeneWalk, GSEA, ORA, and splicing. You can upload
+splicing data there to see expression and splicing changes side by side.</p>
 </div>
         """, unsafe_allow_html=True)
 
@@ -278,6 +319,14 @@ if st.session_state.app_mode is None:
 if st.session_state.app_mode == "comparison":
     from comparison_app import run_comparison_ui
     run_comparison_ui()
+    st.stop()
+
+# =========================================================================
+# SPLICING ANALYSIS PIPELINE
+# =========================================================================
+if st.session_state.app_mode == "splicing":
+    from splicing_app import run_splicing_ui
+    run_splicing_ui()
     st.stop()
 
 # =========================================================================
