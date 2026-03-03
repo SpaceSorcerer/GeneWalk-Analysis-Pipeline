@@ -1125,14 +1125,14 @@ def run_comparison_ui() -> None:
             with gw_sub[0]:
                 if gw_up is not None and not gw_up.empty:
                     st.markdown(f"**{len(up_genes)} up-regulated genes** analyzed by GeneWalk")
-                    render_dashboard(gw_up)
+                    render_dashboard(gw_up, key_prefix="gw_up_")
                 else:
                     st.info("No GeneWalk results for up-regulated genes.")
 
             with gw_sub[1]:
                 if gw_down is not None and not gw_down.empty:
                     st.markdown(f"**{len(down_genes)} down-regulated genes** analyzed by GeneWalk")
-                    render_dashboard(gw_down)
+                    render_dashboard(gw_down, key_prefix="gw_down_")
                 else:
                     st.info("No GeneWalk results for down-regulated genes.")
 

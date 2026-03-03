@@ -68,7 +68,11 @@ def _sorted_genes(
     return sorted(df["hgnc_symbol"].dropna().unique().tolist())
 
 
-def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
+def render_dashboard(
+    df: pd.DataFrame,
+    run_log: str | None = None,
+    key_prefix: str = "",
+):
     """Render the full interactive results dashboard.
 
     Parameters
@@ -77,6 +81,9 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
         GeneWalk results dataframe.
     run_log : str, optional
         Markdown-formatted run log to display in an expander.
+    key_prefix : str
+        Prefix for all Streamlit widget keys, allowing multiple dashboard
+        instances on the same page (e.g. up-regulated vs down-regulated).
     """
     if run_log:
         with st.expander("Run log", expanded=False):
@@ -92,6 +99,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             "P-value column",
             [c for c in ["gene_padj", "global_padj"] if c in df.columns] or ["(none)"],
             help="Which adjusted p-value to use for filtering and visualization.",
+            key=f"{key_prefix}padj_col",
         )
 
         padj_threshold = filter_cols[1].slider(
@@ -100,6 +108,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             format="%.3f",
             help="Gene-GO pairs with adjusted p-value below this threshold are "
                  "considered significant.",
+            key=f"{key_prefix}padj_threshold",
         )
 
         domain_options = (
@@ -111,6 +120,7 @@ def render_dashboard(df: pd.DataFrame, run_log: str | None = None):
             "GO domain",
             domain_options,
             help="Filter to a specific Gene Ontology domain.",
+            key=f"{key_prefix}domain_filter",
         )
 
     effective_padj_col = padj_col if padj_col != "(none)" else "gene_padj"
@@ -210,6 +220,7 @@ GO terms when analyzed with different gene sets.</li>
         help="Controls gene ordering in the Per-Gene Explorer, Network, and "
              "Heatmap selectors. 'Input order' preserves the order from your "
              "original gene list / GeneWalk output.",
+        key=f"{key_prefix}gene_sort",
     )
     available_genes = _sorted_genes(
         df, gene_sort, effective_padj_col, padj_threshold,
@@ -229,12 +240,14 @@ GO terms when analyzed with different gene sets.</li>
                 volcano_plot(df, padj_col=effective_padj_col,
                              padj_threshold=padj_threshold),
                 width="stretch",
+                key=f"{key_prefix}volcano",
             )
         with col_right:
             st.plotly_chart(
                 go_domain_pie(df, padj_col=effective_padj_col,
                               padj_threshold=padj_threshold),
                 width="stretch",
+                key=f"{key_prefix}domain_pie",
             )
 
         if padj_col != "(none)":
@@ -244,24 +257,33 @@ GO terms when analyzed with different gene sets.</li>
             )
             if not gene_summary.empty:
                 st.plotly_chart(summary_bar(gene_summary),
-                               width="stretch")
+                               width="stretch",
+                               key=f"{key_prefix}summary_bar")
 
         st.plotly_chart(
             pvalue_distribution(df, padj_col=effective_padj_col),
             width="stretch",
+            key=f"{key_prefix}pval_dist",
         )
 
     # ---- Tab: Per-Gene Explorer -------------------------------------------
     with tab_gene:
         if available_genes:
             gene_col1, gene_col2 = st.columns([2, 1])
-            selected_gene = gene_col1.selectbox("Select a gene", available_genes)
-            top_n = gene_col2.slider("GO terms to show", 5, 50, 20)
+            selected_gene = gene_col1.selectbox(
+                "Select a gene", available_genes,
+                key=f"{key_prefix}selected_gene",
+            )
+            top_n = gene_col2.slider(
+                "GO terms to show", 5, 50, 20,
+                key=f"{key_prefix}top_n",
+            )
 
             st.plotly_chart(
                 gene_bar_chart(df, selected_gene,
                                padj_col=effective_padj_col, top_n=top_n),
                 width="stretch",
+                key=f"{key_prefix}gene_bar",
             )
 
             with st.expander(f"Raw data for {selected_gene}", expanded=False):
@@ -287,10 +309,10 @@ GO terms when analyzed with different gene sets.</li>
                 available_genes,
                 default=(available_genes[:6]
                          if len(available_genes) >= 6 else available_genes),
-                key="net_genes",
+                key=f"{key_prefix}net_genes",
             )
             max_edges = net_col2.slider("Max edges", 50, 500, 200,
-                                        key="net_edges")
+                                        key=f"{key_prefix}net_edges")
 
             st.plotly_chart(
                 gene_go_network(
@@ -301,6 +323,7 @@ GO terms when analyzed with different gene sets.</li>
                     max_edges=max_edges,
                 ),
                 width="stretch",
+                key=f"{key_prefix}network",
             )
             st.caption(
                 "Red = genes | Blue = biological process | "
@@ -319,8 +342,10 @@ GO terms when analyzed with different gene sets.</li>
                 available_genes,
                 default=(available_genes[:10]
                          if len(available_genes) >= 10 else available_genes),
+                key=f"{key_prefix}heatmap_genes",
             )
-            max_terms = hm_col2.slider("Max GO terms", 10, 100, 30)
+            max_terms = hm_col2.slider("Max GO terms", 10, 100, 30,
+                                       key=f"{key_prefix}max_terms")
 
             st.plotly_chart(
                 gene_similarity_heatmap(
@@ -331,6 +356,7 @@ GO terms when analyzed with different gene sets.</li>
                     max_terms=max_terms,
                 ),
                 width="stretch",
+                key=f"{key_prefix}heatmap",
             )
         else:
             st.info("No gene symbols found in results.")
@@ -347,6 +373,7 @@ GO terms when analyzed with different gene sets.</li>
             csv_buf.getvalue(),
             file_name="genewalk_filtered_results.csv",
             mime="text/csv",
+            key=f"{key_prefix}download_csv",
         )
 
     # Footer
