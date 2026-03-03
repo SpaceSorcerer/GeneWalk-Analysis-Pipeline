@@ -24,32 +24,54 @@ def dpsi_volcano(
     """Volcano plot: delta-PSI vs -log10(p-value/FDR).
 
     Points colored by significance and direction of splicing change.
+
+    When no p-value/FDR is available but ``mv_dpsi`` (vast-tools diff
+    confidence bound) exists, uses |MV[dPsi]| as the Y-axis instead,
+    giving a useful "confidence volcano" plot.
     """
     if df.empty or "dpsi" not in df.columns:
         return go.Figure().update_layout(title="No splicing data to display")
 
     plot = df.dropna(subset=["dpsi"]).copy()
 
+    # Choose Y-axis metric: prefer FDR/pvalue, fall back to MV[dPsi]
     stat_col = "fdr" if "fdr" in plot.columns and plot["fdr"].notna().any() else "pvalue"
-    if stat_col not in plot.columns or plot[stat_col].isna().all():
+    has_stat = stat_col in plot.columns and not plot[stat_col].isna().all()
+    has_mv = "mv_dpsi" in plot.columns and plot["mv_dpsi"].notna().any()
+
+    if not has_stat and not has_mv:
         return go.Figure().update_layout(
             title="No p-value/FDR available for volcano plot"
         )
 
-    plot["neg_log10_p"] = -np.log10(plot[stat_col].clip(lower=1e-300))
+    if has_stat:
+        plot["y_val"] = -np.log10(plot[stat_col].clip(lower=1e-300))
+        y_label = f"-log10({stat_col.upper()})"
+    else:
+        # MV[dPsi] fallback: higher absolute value = more confident
+        plot["y_val"] = plot["mv_dpsi"].abs()
+        y_label = "|MV[dPsi]| (Confidence)"
 
     plot["category"] = "Not significant"
-    sig_mask = plot[stat_col] <= fdr_threshold
+    if has_stat:
+        sig_mask = plot[stat_col] <= fdr_threshold
+    else:
+        # For MV[dPsi], event is confident when sign matches dpsi
+        sig_mask = (
+            ((plot["mv_dpsi"] > 0) & (plot["dpsi"] > 0))
+            | ((plot["mv_dpsi"] < 0) & (plot["dpsi"] < 0))
+        )
     plot.loc[sig_mask & (plot["dpsi"] >= dpsi_threshold), "category"] = "Inclusion increased"
     plot.loc[sig_mask & (plot["dpsi"] <= -dpsi_threshold), "category"] = "Inclusion decreased"
 
-    hover_cols = [c for c in ["gene", "event_id", "event_type", "dpsi", stat_col]
+    hover_stat = stat_col if has_stat else "mv_dpsi"
+    hover_cols = [c for c in ["gene", "event_id", "event_type", "dpsi", hover_stat]
                   if c in plot.columns]
 
     fig = px.scatter(
         plot,
         x="dpsi",
-        y="neg_log10_p",
+        y="y_val",
         color="category",
         color_discrete_map={
             "Inclusion increased": "#D9534F",
@@ -59,17 +81,24 @@ def dpsi_volcano(
         hover_data=hover_cols,
         labels={
             "dpsi": "\u0394PSI (Condition 2 \u2212 Condition 1)",
-            "neg_log10_p": f"-log10({stat_col.upper()})",
+            "y_val": y_label,
         },
         opacity=0.6,
     )
     fig.add_vline(x=dpsi_threshold, line_dash="dash", line_color="#888", line_width=0.8)
     fig.add_vline(x=-dpsi_threshold, line_dash="dash", line_color="#888", line_width=0.8)
-    fig.add_hline(
-        y=-np.log10(fdr_threshold), line_dash="dash", line_color="#888", line_width=0.8,
+    if has_stat:
+        fig.add_hline(
+            y=-np.log10(fdr_threshold), line_dash="dash", line_color="#888", line_width=0.8,
+        )
+
+    title = (
+        "Splicing Volcano Plot (\u0394PSI vs Significance)"
+        if has_stat
+        else "Splicing Confidence Plot (\u0394PSI vs MV[dPsi])"
     )
     fig.update_layout(
-        title="Splicing Volcano Plot (\u0394PSI vs Significance)",
+        title=title,
         template="plotly_white",
         height=550,
     )

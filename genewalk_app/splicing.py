@@ -52,6 +52,10 @@ def _classify_vt_event(event_id: str) -> str:
 def _detect_vasttools_columns(df: pd.DataFrame) -> dict[str, str | None]:
     """Auto-detect column names from a vast-tools table.
 
+    Handles both ``vast-tools compare`` output (columns like MeanPSI_grp1,
+    dPSI) and ``vast-tools diff`` output (per-sample PSI columns, E[dPsi],
+    MV[dPsi]_at_X).
+
     Returns a dict mapping our internal names to the actual column names,
     or None if not found.
     """
@@ -63,23 +67,74 @@ def _detect_vasttools_columns(df: pd.DataFrame) -> dict[str, str | None]:
                 return cols[c.lower()]
         return None
 
+    def _find_prefix(prefix: str) -> str | None:
+        """Find the first column whose lowercased name starts with *prefix*."""
+        for lowered, orig in cols.items():
+            if lowered.startswith(prefix):
+                return orig
+        return None
+
+    gene = _find(["gene", "genename", "gene_name", "symbol"])
+    event_id = _find(["event", "event_id", "eventid"])
+    coord = _find(["coord", "coordinates", "genomic_coord"])
+    dpsi = _find([
+        "dpsi", "delta_psi", "deltapsi", "dpsi_val",
+        "e[dpsi]",            # vast-tools diff output
+        "e[dpsi]_per_rep",    # vast-tools compare output
+    ])
+    pvalue = _find(["p", "pvalue", "p-value", "p_value", "pval"])
+
+    psi_1 = _find([
+        "meanpsi_grp1", "mean_psi_group1", "meanpsi_control",
+        "psi_1", "psi1", "meanpsi_1",
+    ])
+    psi_2 = _find([
+        "meanpsi_grp2", "mean_psi_group2", "meanpsi_treatment",
+        "psi_2", "psi2", "meanpsi_2",
+    ])
+
+    # vast-tools diff quality metric: MV[dPsi]_at_X (confidence bound)
+    mv_dpsi = _find_prefix("mv[dpsi]")
+
+    # --- Positional PSI detection for vast-tools diff format ---
+    # In diff output, per-sample PSI columns sit between EVENT and
+    # E[dPsi].  They have sample-specific names (e.g.
+    # "24071R_04_03_S158_L007_R1_001") that cannot be matched by name.
+    if psi_1 is None and psi_2 is None and event_id and dpsi:
+        known = {gene, event_id, coord, dpsi, pvalue, mv_dpsi}
+        known.discard(None)
+        known_lower = {c.lower() for c in known}
+
+        candidate_psi = [
+            c for c in df.columns if c.lower() not in known_lower
+        ]
+
+        # Keep only columns whose values look numeric (PSI or "NA")
+        numeric_psi = []
+        for c in candidate_psi:
+            sample = df[c].dropna().head(20)
+            if len(sample) > 0:
+                numeric_count = pd.to_numeric(
+                    sample, errors="coerce",
+                ).notna().sum()
+                if numeric_count > len(sample) * 0.3:
+                    numeric_psi.append(c)
+
+        if len(numeric_psi) >= 2:
+            psi_1 = numeric_psi[0]
+            psi_2 = numeric_psi[1]
+        elif len(numeric_psi) == 1:
+            psi_1 = numeric_psi[0]
+
     return {
-        "gene": _find(["gene", "genename", "gene_name", "symbol"]),
-        "event_id": _find(["event", "event_id", "eventid"]),
-        "coord": _find(["coord", "coordinates", "genomic_coord"]),
-        "dpsi": _find([
-            "dpsi", "delta_psi", "deltapsi", "dpsi_val",
-            "e[dpsi]_per_rep",  # vast-tools compare output
-        ]),
-        "pvalue": _find(["p", "pvalue", "p-value", "p_value", "pval"]),
-        "psi_1": _find([
-            "meanpsi_grp1", "mean_psi_group1", "meanpsi_control",
-            "psi_1", "psi1", "meanpsi_1",
-        ]),
-        "psi_2": _find([
-            "meanpsi_grp2", "mean_psi_group2", "meanpsi_treatment",
-            "psi_2", "psi2", "meanpsi_2",
-        ]),
+        "gene": gene,
+        "event_id": event_id,
+        "coord": coord,
+        "dpsi": dpsi,
+        "pvalue": pvalue,
+        "psi_1": psi_1,
+        "psi_2": psi_2,
+        "mv_dpsi": mv_dpsi,
     }
 
 
@@ -92,6 +147,10 @@ def parse_vasttools(
     Accepts either:
     * A file path to a tab-separated vast-tools table
     * A pre-loaded DataFrame
+
+    Handles both ``vast-tools compare`` (MeanPSI_grp1/grp2, dPSI) and
+    ``vast-tools diff`` (per-sample PSI columns, E[dPsi], MV[dPsi]_at_X)
+    output formats.
     """
     if isinstance(filepath_or_df, pd.DataFrame):
         raw = filepath_or_df.copy()
@@ -132,8 +191,31 @@ def parse_vasttools(
     if out["dpsi"].isna().all() and not out["psi_1"].isna().all():
         out["dpsi"] = out["psi_2"] - out["psi_1"]
 
-    # vast-tools doesn't always have FDR; fill with pvalue if missing
-    out["fdr"] = out["pvalue"]
+    # Store MV[dPsi] quality metric if available (vast-tools diff)
+    if detected.get("mv_dpsi"):
+        out["mv_dpsi"] = pd.to_numeric(raw[detected["mv_dpsi"]], errors="coerce")
+
+    # --- Scale normalisation ---
+    # vast-tools reports PSI on a 0-100 scale; normalise to 0-1 for
+    # consistency with rMATS and the default filter thresholds.
+    for psi_col in ("psi_1", "psi_2"):
+        if psi_col in out.columns and out[psi_col].notna().any():
+            if out[psi_col].dropna().abs().max() > 1.0:
+                out[psi_col] = out[psi_col] / 100.0
+
+    if out["dpsi"].notna().any() and out["dpsi"].dropna().abs().max() > 1.0:
+        out["dpsi"] = out["dpsi"] / 100.0
+
+    if "mv_dpsi" in out.columns and out["mv_dpsi"].notna().any():
+        if out["mv_dpsi"].dropna().abs().max() > 1.0:
+            out["mv_dpsi"] = out["mv_dpsi"] / 100.0
+
+    # vast-tools doesn't always have FDR; fill with pvalue if available
+    if out["pvalue"].notna().any():
+        out["fdr"] = out["pvalue"]
+    else:
+        out["fdr"] = float("nan")
+
     out["source"] = "vast-tools"
 
     return out.dropna(subset=["gene"])
