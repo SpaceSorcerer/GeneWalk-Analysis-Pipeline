@@ -22,6 +22,7 @@ ROOT = Path(__file__).parent
 LAUNCHER = ROOT / "desktop_launcher.py"
 DESKTOP_APP = ROOT / "desktop.py"
 COMPARISON_APP = ROOT / "comparison_app.py"
+SPLICING_APP = ROOT / "splicing_app.py"
 GENEWALK_APP_PKG = ROOT / "genewalk_app"
 SAMPLE_DATA = ROOT / "sample_data"
 STREAMLIT_CONFIG = ROOT / ".streamlit"
@@ -56,6 +57,7 @@ def build():
         # ---- Data files ----
         "--add-data", f"{DESKTOP_APP}{os.pathsep}.",
         "--add-data", f"{COMPARISON_APP}{os.pathsep}.",
+        "--add-data", f"{SPLICING_APP}{os.pathsep}.",
         "--add-data", f"{GENEWALK_APP_PKG}{os.pathsep}genewalk_app",
         "--add-data", f"{SAMPLE_DATA}{os.pathsep}sample_data",
         "--add-data", f"{STREAMLIT_CONFIG}{os.pathsep}.streamlit",
@@ -108,6 +110,14 @@ def build():
         "--hidden-import", "gseapy",
         "--hidden-import", "gseapy.enrichr",
         "--hidden-import", "gseapy.gsea",
+        # Splicing pipeline modules (lazy-imported by desktop.py)
+        "--hidden-import", "splicing_app",
+        "--hidden-import", "genewalk_app.splicing",
+        "--hidden-import", "genewalk_app.splicing_viz",
+        # Shared modules used by multiple pipelines
+        "--hidden-import", "genewalk_app.gene_investigator",
+        "--hidden-import", "genewalk_app.styles",
+        "--hidden-import", "genewalk_app.dashboard",
     ]
 
     print(f"Building {APP_NAME}...")

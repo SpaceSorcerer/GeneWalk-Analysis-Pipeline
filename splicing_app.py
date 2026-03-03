@@ -15,7 +15,6 @@ import pandas as pd
 import streamlit as st
 
 from genewalk_app.splicing import (
-    auto_detect_format,
     filter_splicing_events,
     get_gene_splicing_events,
     parse_rmats_file,
