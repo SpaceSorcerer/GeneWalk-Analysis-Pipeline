@@ -56,6 +56,20 @@
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\sample_data\sample_deg_table.csv** -- Sample DEG table (legacy, not used by GeneWalk-only app). May be removed in a future cleanup.
 
+## Tests
+
+- **E:\Claude\GeneWalk-Analysis-Pipeline\tests\__init__.py** -- Test suite init (empty). Marks tests/ as a Python package.
+
+- **E:\Claude\GeneWalk-Analysis-Pipeline\tests\conftest.py** -- Shared pytest fixtures for the test suite. Provides sample DataFrames mimicking GeneWalk results (20 rows with realistic values), a sample gene list, an empty DataFrame with correct columns, and a temp CSV fixture.
+
+- **E:\Claude\GeneWalk-Analysis-Pipeline\tests\test_runner.py** -- Tests for genewalk_app.runner backend functions. Covers save_gene_list, load_results, find_results_csv, filter_results, get_gene_summary, _sanitize_project_name, and _parse_progress (49 tests).
+
+- **E:\Claude\GeneWalk-Analysis-Pipeline\tests\test_visualizations.py** -- Tests for genewalk_app.visualizations Plotly chart functions. Covers all 7 chart types with normal data, empty data, single gene, single GO term, missing columns, and strict threshold edge cases (32 tests).
+
+- **E:\Claude\GeneWalk-Analysis-Pipeline\tests\test_dashboard.py** -- Tests for dashboard logic (filtering, metrics, CSV export) without importing Streamlit. Covers padj column selection, threshold filtering, GO domain filtering, metric computation, and round-trip CSV export (16 tests).
+
 ## CI/CD
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\.github\workflows\build-desktop.yml** -- GitHub Actions workflow that builds desktop executables for Windows, macOS, and Linux on version tags. Creates a GitHub Release with zipped artifacts.
+
+- **E:\Claude\GeneWalk-Analysis-Pipeline\.github\workflows\test.yml** -- GitHub Actions workflow that runs the pytest test suite on push and pull_request events. Tests against Python 3.9, 3.10, 3.11, and 3.12 on Ubuntu.

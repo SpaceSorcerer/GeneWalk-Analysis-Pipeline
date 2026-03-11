@@ -16,10 +16,12 @@ GO_DOMAIN_COLORS = {
 
 def volcano_plot(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold: float = 0.05) -> go.Figure:
     """Volcano-style plot: similarity score vs -log10(adjusted p-value)."""
-    if padj_col not in df.columns or "sim" not in df.columns:
+    if df.empty or padj_col not in df.columns or "sim" not in df.columns:
         return go.Figure().update_layout(title="Missing required columns for volcano plot")
 
     plot_df = df.dropna(subset=[padj_col, "sim"]).copy()
+    if plot_df.empty:
+        return go.Figure().update_layout(title="No valid data for volcano plot")
     plot_df["neg_log10_padj"] = -np.log10(plot_df[padj_col].clip(lower=1e-300))
     plot_df["significant"] = plot_df[padj_col].le(padj_threshold).map(
         {True: "Significant", False: "Not significant"}
@@ -61,6 +63,8 @@ def gene_bar_chart(
     top_n: int = 20,
 ) -> go.Figure:
     """Horizontal bar chart of top GO terms for a single gene."""
+    if df.empty or "hgnc_symbol" not in df.columns:
+        return go.Figure().update_layout(title=f"No results for {gene}")
     gene_df = df[df["hgnc_symbol"] == gene].copy()
     if gene_df.empty:
         return go.Figure().update_layout(title=f"No results for {gene}")
@@ -103,7 +107,12 @@ def go_domain_pie(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold:
     if "go_domain" not in df.columns:
         return go.Figure().update_layout(title="GO domain column not found")
 
+    if df.empty:
+        return go.Figure().update_layout(title="No data to display")
+
     sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
+    if sig.empty:
+        return go.Figure().update_layout(title="No significant results for pie chart")
     counts = sig["go_domain"].value_counts().reset_index()
     counts.columns = ["go_domain", "count"]
 
@@ -129,7 +138,7 @@ def gene_similarity_heatmap(
     max_terms: int = 30,
 ) -> go.Figure:
     """Heatmap of similarity scores: genes vs GO terms."""
-    if "hgnc_symbol" not in df.columns or "go_name" not in df.columns or "sim" not in df.columns:
+    if df.empty or "hgnc_symbol" not in df.columns or "go_name" not in df.columns or "sim" not in df.columns:
         return go.Figure().update_layout(title="Missing required columns for heatmap")
 
     sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
@@ -167,7 +176,8 @@ def gene_similarity_heatmap(
 
 def summary_bar(summary_df: pd.DataFrame) -> go.Figure:
     """Bar chart of significant GO term counts per gene."""
-    if summary_df.empty:
+    required = {"hgnc_symbol", "significant_go_terms", "mean_similarity"}
+    if summary_df.empty or not required.issubset(summary_df.columns):
         return go.Figure().update_layout(title="No summary data")
 
     fig = px.bar(
@@ -194,7 +204,7 @@ def summary_bar(summary_df: pd.DataFrame) -> go.Figure:
 
 def pvalue_distribution(df: pd.DataFrame, padj_col: str = "gene_padj") -> go.Figure:
     """Histogram of adjusted p-value distribution."""
-    if padj_col not in df.columns:
+    if df.empty or padj_col not in df.columns:
         return go.Figure().update_layout(title="P-value column not found")
 
     fig = px.histogram(
@@ -220,6 +230,8 @@ def gene_go_network(
     max_edges: int = 200,
 ) -> go.Figure:
     """Interactive network graph: genes connected to their significant GO terms."""
+    if df.empty:
+        return go.Figure().update_layout(title="No data to display")
     sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
 
     if genes:
