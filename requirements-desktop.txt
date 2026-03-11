@@ -5,7 +5,6 @@ pandas>=2.0
 networkx>=3.0
 numpy
 genewalk>=1.6
-gseapy>=1.1
 
 # For building the executable (only needed by developers)
 # pip install pyinstaller

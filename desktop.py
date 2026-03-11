@@ -1,8 +1,7 @@
-"""GeneWalk Analysis Pipeline -- Desktop App.
+"""GeneWalk App -- Desktop.
 
-Full desktop application that can run GeneWalk analyses, GSEA/ORA comparison
-pipelines, and visualize results. This is the entry point bundled by
-PyInstaller into an executable.
+Full desktop application that can run GeneWalk analyses and visualize results.
+This is the entry point bundled by PyInstaller into an executable.
 
 Launch with:  streamlit run desktop.py
 """
@@ -32,306 +31,29 @@ SAMPLE_GENES_PATH = Path(__file__).parent / "sample_data" / "sample_genes.txt"
 SAMPLE_RESULTS_PATH = (
     Path(__file__).parent / "sample_data" / "sample_genewalk_results.csv"
 )
-SAMPLE_DEG_PATH = (
-    Path(__file__).parent / "sample_data" / "sample_deg_table.csv"
-)
 
 # ---------------------------------------------------------------------------
 # Page config & custom styles
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="GeneWalk Analysis Pipeline",
+    page_title="GeneWalk App",
     page_icon=":dna:",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 st.markdown(get_custom_css(), unsafe_allow_html=True)
 
-# Extra CSS for the pipeline chooser cards
-st.markdown("""
-<style>
-.pipeline-chooser {
-    display: flex;
-    gap: 2rem;
-    margin: 2rem 0;
-}
-.pipeline-card {
-    flex: 1;
-    background: var(--gw-card-bg, #fff);
-    border: 2px solid var(--gw-card-border, #e2e8f0);
-    border-radius: 16px;
-    padding: 2rem;
-    transition: all 0.2s ease;
-    cursor: pointer;
-}
-.pipeline-card:hover {
-    border-color: #2a6cb6;
-    box-shadow: 0 8px 24px rgba(42,108,182,0.15);
-    transform: translateY(-3px);
-}
-.pipeline-card .pipeline-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-}
-.pipeline-card h3 {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--gw-text-primary, #1e293b);
-    margin: 0 0 0.75rem 0;
-}
-.pipeline-card p {
-    font-size: 0.95rem;
-    color: var(--gw-text-secondary, #64748b);
-    line-height: 1.6;
-    margin: 0 0 0.5rem 0;
-}
-.pipeline-card .pipeline-features {
-    font-size: 0.85rem;
-    color: var(--gw-text-secondary, #64748b);
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--gw-card-border, #e2e8f0);
-}
-.pipeline-card .pipeline-features li {
-    margin-bottom: 0.3rem;
-}
-.pipeline-active {
-    border-color: #2a6cb6;
-    background: linear-gradient(135deg, rgba(42,108,182,0.04) 0%, rgba(74,144,217,0.08) 100%);
-}
-.mode-indicator {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-}
-.mode-gw { background: #dbeafe; color: #1e40af; }
-.mode-comp { background: #d1fae5; color: #065f46; }
-.mode-spl { background: #fce7f3; color: #9d174d; }
-</style>
-""", unsafe_allow_html=True)
-
 # ---------------------------------------------------------------------------
 # Session state
 # ---------------------------------------------------------------------------
-if "app_mode" not in st.session_state:
-    st.session_state.app_mode = None  # None = chooser, "genewalk", "comparison", or "splicing"
 if "results_df" not in st.session_state:
     st.session_state.results_df = None
 if "run_log" not in st.session_state:
     st.session_state.run_log = None
 
 # ---------------------------------------------------------------------------
-# Sidebar — always show the mode switcher at the top
+# Sidebar
 # ---------------------------------------------------------------------------
-with st.sidebar:
-    if st.session_state.app_mode is not None:
-        _mode_labels = {
-            "genewalk": "GeneWalk Analysis",
-            "comparison": "GSEA + GeneWalk Comparison",
-            "splicing": "Splicing Analysis",
-        }
-        _mode_classes = {
-            "genewalk": "mode-gw",
-            "comparison": "mode-comp",
-            "splicing": "mode-spl",
-        }
-        current_label = _mode_labels.get(st.session_state.app_mode, "")
-        mode_class = _mode_classes.get(st.session_state.app_mode, "mode-gw")
-        st.markdown(
-            f'<div class="mode-indicator {mode_class}">'
-            f'{current_label}</div>',
-            unsafe_allow_html=True,
-        )
-        if st.button("Switch Pipeline", use_container_width=True):
-            st.session_state.app_mode = None
-            st.rerun()
-        st.markdown("---")
-
-# ---------------------------------------------------------------------------
-# Pipeline chooser — shown when no mode is selected
-# ---------------------------------------------------------------------------
-if st.session_state.app_mode is None:
-    # Hero
-    st.markdown("""
-    <div class="hero-banner">
-        <div class="hero-badge">Desktop App</div>
-        <h1>GeneWalk Analysis Pipeline</h1>
-        <p>Context-specific functional analysis and pathway enrichment
-        for your gene lists. Choose a pipeline below to get started.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("")
-    st.markdown("### Choose Your Analysis Pipeline")
-
-    col_gw, col_comp, col_spl = st.columns(3, gap="large")
-
-    with col_gw:
-        st.markdown("""
-        <div class="pipeline-card">
-            <div class="pipeline-icon">&#x1F9EC;</div>
-            <h3>GeneWalk Analysis</h3>
-            <p>Upload a plain gene list and run GeneWalk to identify which
-            GO functions are contextually relevant to your genes.</p>
-            <div class="pipeline-features">
-            <strong>Best for:</strong>
-            <ul>
-            <li>Single gene list (e.g. CRISPR hits, GWAS genes)</li>
-            <li>Context-specific functional annotation</li>
-            <li>Gene&#8211;GO network exploration</li>
-            </ul>
-            <strong>Input:</strong> Gene list (.txt, one per line)
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button(
-            "Start GeneWalk Analysis",
-            type="primary",
-            use_container_width=True,
-            key="choose_gw",
-        ):
-            st.session_state.app_mode = "genewalk"
-            st.rerun()
-
-    with col_comp:
-        st.markdown("""
-        <div class="pipeline-card">
-            <div class="pipeline-icon">&#x1F4CA;</div>
-            <h3>GSEA + GeneWalk Comparison</h3>
-            <p>Upload a DESeq2/edgeR/limma DEG table and run GeneWalk, GSEA,
-            and ORA together with a unified comparison dashboard.</p>
-            <div class="pipeline-features">
-            <strong>Best for:</strong>
-            <ul>
-            <li>Differential expression results (DESeq2, edgeR, limma)</li>
-            <li>Comparing up vs down regulated genes</li>
-            <li>Cross-method concordance (GeneWalk + GSEA + ORA)</li>
-            <li>Gene Investigator for per-gene deep dives</li>
-            </ul>
-            <strong>Input:</strong> DEG table (.csv with gene, log2FC, padj)
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button(
-            "Start Comparison Pipeline",
-            type="primary",
-            use_container_width=True,
-            key="choose_comp",
-        ):
-            st.session_state.app_mode = "comparison"
-            st.rerun()
-
-    with col_spl:
-        st.markdown("""
-        <div class="pipeline-card">
-            <div class="pipeline-icon">&#x2702;&#xFE0F;</div>
-            <h3>Splicing Analysis</h3>
-            <p>Upload differential splicing results from vast-tools or rMATS
-            to explore alternative splicing events across conditions.</p>
-            <div class="pipeline-features">
-            <strong>Best for:</strong>
-            <ul>
-            <li>vast-tools diff/compare output</li>
-            <li>rMATS event-type results (SE, RI, A3SS, A5SS, MXE)</li>
-            <li>&Delta;PSI volcano plots and event classification</li>
-            <li>Per-gene splicing investigation</li>
-            </ul>
-            <strong>Input:</strong> Splicing table (.tsv/.txt)
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button(
-            "Start Splicing Analysis",
-            type="primary",
-            use_container_width=True,
-            key="choose_spl",
-        ):
-            st.session_state.app_mode = "splicing"
-            st.rerun()
-
-    st.markdown("")
-    with st.expander("What's the difference?", expanded=False):
-        st.markdown("""
-<div class="guide-section">
-<table class="param-table">
-<tr>
-    <th>Feature</th>
-    <th>GeneWalk Analysis</th>
-    <th>GSEA + GeneWalk Comparison</th>
-    <th>Splicing Analysis</th>
-</tr>
-<tr>
-    <td><strong>Input</strong></td>
-    <td>Plain gene list (.txt)</td>
-    <td>DEG table with fold-change &amp; p-values</td>
-    <td>vast-tools or rMATS output</td>
-</tr>
-<tr>
-    <td><strong>Analyses</strong></td>
-    <td>GeneWalk only</td>
-    <td>GeneWalk (up &amp; down) + GSEA + ORA + Gene Investigator</td>
-    <td>&Delta;PSI analysis, event classification</td>
-</tr>
-<tr>
-    <td><strong>What it measures</strong></td>
-    <td>Context-specific GO functions</td>
-    <td>Changes in RNA abundance + pathway enrichment</td>
-    <td>Changes in RNA splicing (exon inclusion/exclusion)</td>
-</tr>
-<tr>
-    <td><strong>Cross-analysis</strong></td>
-    <td>No</td>
-    <td>Yes &mdash; concordance + Gene Investigator (+ splicing if uploaded)</td>
-    <td>Standalone (or upload into Comparison pipeline)</td>
-</tr>
-<tr>
-    <td><strong>Use case</strong></td>
-    <td>Quick gene list from any source</td>
-    <td>Full differential expression characterization</td>
-    <td>Alternative splicing analysis</td>
-</tr>
-</table>
-<p><strong>Tip:</strong> The Comparison Pipeline includes a
-<strong>Gene Investigator</strong> that lets you select any gene and view
-all evidence across DEG, GeneWalk, GSEA, ORA, and splicing. You can upload
-splicing data there to see expression and splicing changes side by side.</p>
-</div>
-        """, unsafe_allow_html=True)
-
-    # Footer
-    st.markdown(
-        '<div class="app-footer">Built with '
-        '<a href="https://streamlit.io">Streamlit</a> &middot; '
-        'Analysis by <a href="https://github.com/churchmanlab/genewalk">'
-        "GeneWalk</a> + "
-        '<a href="https://github.com/zqfang/GSEApy">GSEApy</a> &middot; '
-        "Ietswaart et al., <em>Genome Biology</em> 2021</div>",
-        unsafe_allow_html=True,
-    )
-    st.stop()
-
-# =========================================================================
-# COMPARISON PIPELINE
-# =========================================================================
-if st.session_state.app_mode == "comparison":
-    from comparison_app import run_comparison_ui
-    run_comparison_ui()
-    st.stop()
-
-# =========================================================================
-# SPLICING ANALYSIS PIPELINE
-# =========================================================================
-if st.session_state.app_mode == "splicing":
-    from splicing_app import run_splicing_ui
-    run_splicing_ui()
-    st.stop()
-
-# =========================================================================
-# GENEWALK ANALYSIS PIPELINE
-# =========================================================================
 with st.sidebar:
     st.markdown("## GeneWalk Analysis")
     st.caption("Upload genes, configure, and explore results.")
@@ -554,8 +276,8 @@ if run_clicked and genes:
 # Hero banner
 st.markdown("""
 <div class="hero-banner">
-    <div class="hero-badge">GeneWalk Analysis</div>
-    <h1>GeneWalk Analysis Pipeline</h1>
+    <div class="hero-badge">Desktop App</div>
+    <h1>GeneWalk App</h1>
     <p>Identify relevant gene functions for your biological context using network
     representation learning.
     Powered by <a href="https://github.com/churchmanlab/genewalk"

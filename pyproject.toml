@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "genewalk-app"
+version = "1.0.0"
+description = "Desktop and web app for running GeneWalk and exploring results interactively"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Brian Amburn", email = "bramburn@utmb.edu"}
+]
+keywords = ["genewalk", "gene-ontology", "bioinformatics", "visualization"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "streamlit>=1.30",
+    "plotly>=5.18",
+    "pandas>=2.0",
+    "networkx>=3.0",
+    "numpy",
+]
+
+[project.optional-dependencies]
+desktop = [
+    "genewalk>=1.6",
+]
+dev = [
+    "pytest>=7.0",
+    "ruff",
+]
+
+[project.urls]
+Homepage = "https://github.com/SpaceSorcerer/GeneWalk-Analysis-Pipeline"
+Repository = "https://github.com/SpaceSorcerer/GeneWalk-Analysis-Pipeline"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"

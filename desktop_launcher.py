@@ -107,15 +107,8 @@ def main():
     import multiprocessing
     multiprocessing.freeze_support()
 
-    # Determine which app to launch.  --comparison flag launches the
-    # GSEA + GeneWalk comparison pipeline; default is the standard desktop app.
-    if "--comparison" in sys.argv:
-        sys.argv.remove("--comparison")
-        app_filename = "comparison_app.py"
-        label = "GeneWalk + GSEA Comparison Pipeline"
-    else:
-        app_filename = "desktop.py"
-        label = "GeneWalk"
+    app_filename = "desktop.py"
+    label = "GeneWalk"
 
     port = _find_free_port()
 
