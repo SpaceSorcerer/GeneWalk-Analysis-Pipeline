@@ -12,15 +12,15 @@
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\generate_sample_data.py** -- Script to regenerate the sample MAPK/ERK pathway demo data. Produces a realistic genewalk_results.csv with 20 genes and ~400 gene-GO associations.
 
-- **E:\Claude\GeneWalk-Analysis-Pipeline\Dockerfile** -- Container deployment config for the web app. Installs web dependencies and runs Streamlit on port 8501.
+- **E:\Claude\GeneWalk-Analysis-Pipeline\Dockerfile** -- Container deployment config for the web app. Installs web dependencies and runs Streamlit on port 8501 (visualization only, no GeneWalk analysis).
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\requirements.txt** -- Web app Python dependencies (Streamlit, Plotly, pandas, networkx, numpy). Does not include GeneWalk since the web app can visualize pre-computed results.
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\requirements-desktop.txt** -- Desktop app Python dependencies. Includes everything in requirements.txt plus genewalk>=1.6 for running analyses locally.
 
-- **E:\Claude\GeneWalk-Analysis-Pipeline\pyproject.toml** -- Python packaging metadata (PEP 621). Defines project name, version, dependencies, optional extras (desktop, dev), and ruff config.
+- **E:\Claude\GeneWalk-Analysis-Pipeline\pyproject.toml** -- Python packaging metadata (PEP 621). Defines project name, version, dependencies, optional extras (desktop, dev), and ruff linting config.
 
-- **E:\Claude\GeneWalk-Analysis-Pipeline\README.md** -- Project README with installation instructions (pip, executable, Docker), quick start guide, configuration reference, and project structure.
+- **E:\Claude\GeneWalk-Analysis-Pipeline\README.md** -- Project README focused on GeneWalk App. Covers installation (executable, pip, Docker), quick start, dashboard features, configuration, sample data, and citation.
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\CLAUDE.md** -- Project-level instructions for Claude Code. Describes architecture, key files, and build instructions.
 
@@ -28,7 +28,7 @@
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\CITATION.cff** -- Machine-readable citation metadata (CFF format). Used by GitHub's "Cite this repository" feature.
 
-- **E:\Claude\GeneWalk-Analysis-Pipeline\.gitignore** -- Git ignore rules for Python bytecode, virtual environments, IDE files, PyInstaller output, and GeneWalk run artifacts.
+- **E:\Claude\GeneWalk-Analysis-Pipeline\.gitignore** -- Git ignore rules for Python bytecode, virtual environments, IDE files, PyInstaller output, pytest cache, and GeneWalk run artifacts.
 
 ## genewalk_app/ Package
 
@@ -54,7 +54,7 @@
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\sample_data\sample_genewalk_results.csv** -- Pre-computed GeneWalk results for the sample gene list. Contains ~400 gene-GO associations with similarity scores and p-values.
 
-- **E:\Claude\GeneWalk-Analysis-Pipeline\sample_data\sample_deg_table.csv** -- Sample DEG table (legacy, not used by GeneWalk-only app). May be removed in a future cleanup.
+- **E:\Claude\GeneWalk-Analysis-Pipeline\sample_data\sample_deg_table.csv** -- Legacy sample DEG table not used by the GeneWalk-only app. Candidate for removal in a future cleanup.
 
 ## Tests
 
@@ -62,7 +62,7 @@
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\tests\conftest.py** -- Shared pytest fixtures for the test suite. Provides sample DataFrames mimicking GeneWalk results (20 rows with realistic values), a sample gene list, an empty DataFrame with correct columns, and a temp CSV fixture.
 
-- **E:\Claude\GeneWalk-Analysis-Pipeline\tests\test_runner.py** -- Tests for genewalk_app.runner backend functions. Covers save_gene_list, load_results, find_results_csv, filter_results, get_gene_summary, _sanitize_project_name, and _parse_progress (49 tests).
+- **E:\Claude\GeneWalk-Analysis-Pipeline\tests\test_runner.py** -- Tests for genewalk_app.runner backend functions. Covers save_gene_list, load_results, find_results_csv, filter_results, get_gene_summary, _sanitize_project_name, and _parse_progress (33 tests).
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\tests\test_visualizations.py** -- Tests for genewalk_app.visualizations Plotly chart functions. Covers all 7 chart types with normal data, empty data, single gene, single GO term, missing columns, and strict threshold edge cases (32 tests).
 

@@ -29,5 +29,8 @@ genewalk_runs/
 dist/
 *.spec
 
+# Test cache
+.pytest_cache/
+
 # Streamlit
 .streamlit/secrets.toml
