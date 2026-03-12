@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 """Backend module for running GeneWalk and parsing results."""
 
+import logging
 import os
 import re
 import subprocess
 import sys
 import tempfile
+import threading
 from collections.abc import Callable
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 import pandas as pd
 
@@ -115,6 +121,7 @@ def run_genewalk(
     alpha_fdr: float = 1.0,
     base_folder: Path | None = None,
     on_progress: Callable[[str], None] | None = None,
+    timeout: float = 7200,
 ) -> dict:
     """Run GeneWalk CLI and return paths to output files.
 
@@ -123,6 +130,9 @@ def run_genewalk(
     on_progress : callable, optional
         Called with a short status string whenever GeneWalk enters a new
         major step (e.g. "Building gene network...", "Computing statistics...").
+    timeout : float
+        Maximum wall-clock seconds before the subprocess is killed.
+        Defaults to 7200 (2 hours).  Set to ``0`` or ``None`` to disable.
 
     Returns a dict with keys: 'return_code', 'stdout', 'stderr', 'output_dir'.
     """
@@ -162,6 +172,22 @@ def run_genewalk(
             "output_dir": base / project,
         }
 
+    # ---- Watchdog timer: kill the subprocess if it exceeds the timeout ----
+    timed_out = False
+    watchdog: threading.Timer | None = None
+    if timeout:
+        def _kill_on_timeout() -> None:
+            nonlocal timed_out
+            timed_out = True
+            try:
+                proc.kill()
+            except OSError:
+                pass
+
+        watchdog = threading.Timer(timeout, _kill_on_timeout)
+        watchdog.daemon = True
+        watchdog.start()
+
     # Stream stderr line-by-line and extract progress updates.
     stderr_lines: list[str] = []
     last_status: str | None = None
@@ -175,13 +201,15 @@ def run_genewalk(
                         last_status = status
                         on_progress(status)
                 except Exception:
-                    pass  # Don't let callback errors kill the reader
+                    logger.debug("Progress callback error", exc_info=True)
     finally:
+        if watchdog is not None:
+            watchdog.cancel()
         # Ensure the subprocess is cleaned up even on exceptions
         try:
             proc.stderr.close()
         except Exception:
-            pass
+            logger.debug("Error closing stderr pipe", exc_info=True)
         try:
             proc.wait(timeout=10)
         except subprocess.TimeoutExpired:
@@ -189,6 +217,11 @@ def run_genewalk(
             proc.wait()
 
     output_dir = base / project
+
+    if timed_out:
+        stderr_lines.append(
+            f"\nERROR: GeneWalk subprocess killed after {timeout}s timeout.\n"
+        )
 
     return {
         "return_code": proc.returncode,

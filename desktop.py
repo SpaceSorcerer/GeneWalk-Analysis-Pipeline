@@ -12,10 +12,6 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-# Signal to the launcher that a browser client has connected so it can
-# skip opening a duplicate tab (handles browser session restore).
-Path(tempfile.gettempdir(), ".genewalk_client_connected").write_text("")
-
 from genewalk_app.dashboard import render_dashboard
 from genewalk_app.runner import (
     _sanitize_project_name,
@@ -31,6 +27,13 @@ SAMPLE_GENES_PATH = Path(__file__).parent / "sample_data" / "sample_genes.txt"
 SAMPLE_RESULTS_PATH = (
     Path(__file__).parent / "sample_data" / "sample_genewalk_results.csv"
 )
+
+# Signal to the launcher that a browser client has connected so it can
+# skip opening a duplicate tab (handles browser session restore).
+# Guarded behind st.runtime.exists() so a plain ``import desktop`` for
+# testing does not create the flag file as a side effect.
+if st.runtime.exists():
+    Path(tempfile.gettempdir(), ".genewalk_client_connected").write_text("")
 
 # ---------------------------------------------------------------------------
 # Page config & custom styles
@@ -195,7 +198,12 @@ if uploaded_results is not None:
     try:
         st.session_state.results_df = pd.read_csv(uploaded_results)
         st.session_state.run_log = "Results loaded from uploaded CSV."
-    except Exception as exc:
+    except (
+        pd.errors.EmptyDataError,
+        pd.errors.ParserError,
+        UnicodeDecodeError,
+        ValueError,
+    ) as exc:
         st.error(f"Could not read uploaded CSV: {exc}")
 
 if run_clicked and genes:

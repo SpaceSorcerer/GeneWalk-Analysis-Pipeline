@@ -73,3 +73,7 @@
 - **E:\Claude\GeneWalk-Analysis-Pipeline\.github\workflows\build-desktop.yml** -- GitHub Actions workflow that builds desktop executables for Windows, macOS, and Linux on version tags. Creates a GitHub Release with zipped artifacts.
 
 - **E:\Claude\GeneWalk-Analysis-Pipeline\.github\workflows\test.yml** -- GitHub Actions workflow that runs the pytest test suite on push and pull_request events. Tests against Python 3.9, 3.10, 3.11, and 3.12 on Ubuntu.
+
+## Reviews
+
+- **E:\Claude\GeneWalk-Analysis-Pipeline\review_code_audit.md** -- Deep code audit covering all 16 Python files. Reports 0 critical/high issues, 4 medium, 7 low, with test coverage gap analysis identifying 10 untested areas.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Shared dashboard rendering for the GeneWalk Analysis Pipeline.
 
 Both the web visualizer (app.py) and the desktop app (desktop.py) use this

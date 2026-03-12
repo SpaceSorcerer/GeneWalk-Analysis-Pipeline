@@ -113,8 +113,7 @@ def go_domain_pie(df: pd.DataFrame, padj_col: str = "gene_padj", padj_threshold:
     sig = df[df[padj_col] <= padj_threshold] if padj_col in df.columns else df
     if sig.empty:
         return go.Figure().update_layout(title="No significant results for pie chart")
-    counts = sig["go_domain"].value_counts().reset_index()
-    counts.columns = ["go_domain", "count"]
+    counts = sig["go_domain"].value_counts().reset_index(name="count")
 
     fig = px.pie(
         counts,
